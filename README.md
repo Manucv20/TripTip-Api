@@ -41,4 +41,3 @@ Si deseas contribuir a este proyecto, por favor haz lo siguiente:
 4. Confirma tus cambios (`git commit -m "Agrega nueva funcionalidad"`).
 5. Envía tus cambios a la rama principal (`git push origin feature/nueva-funcionalidad`).
 6. Abre una solicitud de extracción (pull request) y describe tus cambios detalladamente.
-
