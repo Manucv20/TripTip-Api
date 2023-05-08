@@ -24,7 +24,6 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 
 - Node.js
 - Express.js
-- MongoDB
 
 ## Instalación
 
