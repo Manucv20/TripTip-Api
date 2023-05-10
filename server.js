@@ -33,12 +33,12 @@ app.use('/uploads', express.static('./uploads'));
 
 //Middleware de 404
 
-/* app.use((req, res) => {
+app.use((req, res) => {
   res.status(404).send({
     status: 'error',
     message: 'Not found',
   });
-}); */
+}); 
 
 //Middlware de gestión de errores
 app.use((error, req, res, next) => {
@@ -74,11 +74,11 @@ app.post('/recommendations', newRecommendationController);
 //BORRAR RECOMENDACIÓN
 app.delete('/recommendations/:id', deleteRecommendationController);
 
-//OBTENER TODAS LAS RECOMENDACION POR LOCALIZACION Y CATEGORIA
+//OBTENER TODAS LAS RECOMENDACION POR LOCALIZACION O CATEGORIA
 
 app.get('/recommendations', getRecommendationsByLocationAndCategoryController);
 
-//OBTENER LAS RECOMENDACION ID
+//OBTENER LAS RECOMENDACION POR ID
 app.get('/recommendations/:id', getRecommendationController);
 
 // OBTENER RECOMENDACIONES ORDENADAS POR VOTOS

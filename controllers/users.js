@@ -14,32 +14,10 @@ const newUserController = async (req, res) => {
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-
-    const {
-      name,
-      lastname,
-      address,
-      gender,
-      email,
-      password,
-      profile_image,
-      bio,
-    } = req.body;
-
-    const insertId = await createUser({
-      name,
-      lastname,
-      address,
-      gender,
-      email,
-      password,
-      profile_image,
-      bio,
+    const {name, lastname,address,gender,email,password, profile_image, bio,} = req.body;
+    const insertId = await createUser({name, lastname, address, gender, email, password, profile_image, bio,
     });
-
-    res
-      .status(200)
-      .json({ message: 'User registered successfully', userId: insertId });
+    res.status(200).json({ message: 'User registered successfully', userId: insertId });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });

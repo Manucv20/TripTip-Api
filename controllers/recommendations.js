@@ -120,7 +120,8 @@ const getRecommendationsByLocationAndCategoryController = async (
   let connection;
 
   try {
-    const { error, value } = querySchema.validate(req.query);
+    const { error, value } =
+      getRecommendationsByLocationAndCategorySchema.validate(req.query);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
