@@ -48,7 +48,7 @@ const deleteRecommendationController = async (req, res, next) => {
   let connection;
   try {
     connection = await getConnection();
-    const { error } = idleteRecommendationSchema.validate(req.params);
+    const { error } = idRecommendationSchema.validate(req.params);
     if (error) {
       throw new Error(error.details[0].message);
     }

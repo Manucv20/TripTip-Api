@@ -3,6 +3,7 @@ const {
   newCommentSchema,
   idCommentsSchema,
 } = require('../schemas/commentsSchemas');
+const { createComments } = require('../db/comments.js');
 
 const newCommentController = async (req, res, next) => {
   try {
@@ -11,28 +12,16 @@ const newCommentController = async (req, res, next) => {
       res.status(400).json({ error: error.details[0].message });
       return;
     }
-
-    const { user_id, comment } = req.body;
-    const recommendation_id = req.params.id;
-
-    // Insert comment into database
-    const connection = await getConnection();
-    const insertCommentQuery =
-      'INSERT INTO comments (user_id, recommendation_id, comment) VALUES (?, ?, ?)';
-    await connection.query(insertCommentQuery, [
-      user_id,
-      recommendation_id,
-      comment,
-    ]);
-    connection.release();
-
-    res.status(200).json({ message: 'Comment posted successfully' });
+    const { user_id, recommendation_id, comment } = req.body;
+    const commentId = await createComments(user_id, recommendation_id, comment);
+    return res
+      .status(201)
+      .json({ message: 'Comment posted successfully', commentId });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: 'Server error' });
   }
 };
-
 const getCommentsByRecommendationsController = async (req, res, next) => {
   try {
     const { error } = idCommentsSchema.validate(req.params);

@@ -1,8 +1,10 @@
 const { getConnection } = require('../db/db.js');
+const { validationResult } = require('express-validator');
 const { generateError } = require('../helpers');
 const Joi = require('joi');
 const {
   newUserSchema,
+  loginSchema,
   updateUserSchema,
   getUserSchema,
   userSchema,
@@ -26,6 +28,11 @@ const newUserController = async (req, res) => {
 
 const loginController = async (req, res, next) => {
   try {
+    const { error, value } = loginSchema.validate(req.body);
+
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ error: errors.array()[0].msg });

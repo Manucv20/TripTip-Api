@@ -1,5 +1,5 @@
 const generateError = (message, status) => {
-  const error = new error(message);
+  const error = new Error(message);
   error.httpStatus = status;
   return error;
 };

@@ -10,6 +10,11 @@ const userSchema = Joi.object({
   bio: Joi.string().allow(null),
 });
 
+const loginSchema = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(8).required(),
+});
+
 const newUserSchema = userSchema.keys({
   password: Joi.string().min(8).required(),
 });
@@ -25,6 +30,7 @@ const getUserSchema = Joi.object({
 
 module.exports = {
   userSchema,
+  loginSchema,
   newUserSchema,
   updateUserSchema,
   getUserSchema,
