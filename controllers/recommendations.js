@@ -1,14 +1,19 @@
-const { getConnection } = require('../db/db.js');
-const Joi = require('joi');
+const { generateError, createPathIfNotExists } = require('../helpers');
 const {
   newRecommendationSchema,
   idRecommendationSchema,
   getRecommendationsByLocationAndCategorySchema,
 } = require('../schemas/recommendationsSchemas');
+const {
+  createRecommendation,
+  getRecommendation,
+  getRecommendationById,
+  deleteRecommendationById,
+  recommendationOrderedByVotes,
+  recommendationByUser,
+} = require('../db/recommendations');
 const newRecommendationController = async (req, res, next) => {
-  let connection;
   try {
-    connection = await getConnection();
     const { error } = newRecommendationSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
@@ -16,99 +21,85 @@ const newRecommendationController = async (req, res, next) => {
     const { user_id, title, category, location, summary, details, image } =
       req.body;
 
-    const query = `
-      INSERT INTO recommendations (user_id, title, category, location, summary, details, image)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `;
-    const [result] = await connection.query(query, [
+    const query = await createRecommendation(
       user_id,
       title,
       category,
       location,
       summary,
       details,
-      image,
-    ]);
+      image
+    );
 
+    let imageFileName;
+
+    if (req.files?.image) {
+      //Creo el path del directorio uploads
+      const uploadsDir = path.join(__dirname, '../uploads/recommendationImage');
+      //Creo el directorio si no existe
+      await createPathIfNotExists(uploadsDir);
+      //Procesar la imagen
+      const profile_image = sharp(req.files.image.data);
+      profile_image.resize(256);
+      //Guardo la imagen con un nombre aleatorio en el directorio uploads
+      const { default: nanoid } = await import('nanoid');
+      imageFileName = `${nanoid(20).jpg}`;
+      await image.toFile(path.join(uploadsDir, imageFileName));
+    }
     res.status(200).json({
       message: 'Recommendation created successfully',
-      recommendation_id: result.insertId,
+      recommendation_id: query.insertId,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  } finally {
-    if (connection) {
-      connection.release();
-    }
+    console.log(err);
+    throw generateError('Recommendation didnt create successfully', 500);
   }
 };
 
 const deleteRecommendationController = async (req, res, next) => {
-  let connection;
   try {
-    connection = await getConnection();
     const { error } = idRecommendationSchema.validate(req.params);
     if (error) {
       throw new Error(error.details[0].message);
     }
     const { id } = req.params;
 
-    const deleteQuery = 'DELETE FROM recommendations WHERE id = ?';
-    const [result] = await connection.query(deleteQuery, [id]);
+    const deleteQuery = await getRecommendationById(id);
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Recommendation not found' });
+    if (req.userId !== deleteQuery.user_id) {
+      throw generateError(
+        'You cant delete a recommendation that doesnt belong to you',
+        401
+      );
     }
+
+    await deleteRecommendationById(id);
 
     res.status(200).json({ message: 'Recommendation deleted successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  } finally {
-    if (connection) {
-      connection.release();
-    }
+    console.log(err);
+    throw generateError('Recommendation didnt delete successfully', 500);
   }
 };
 
 const getRecommendationController = async (req, res, next) => {
-  let connection;
   try {
-    connection = await getConnection();
-    const { error, value } = idRecommendationSchema.validate(req.params);
+    /*const { error, value } = idRecommendationSchema.validate(req.params);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
-    }
+    }*/
     const { id } = req.params;
-
-    const [recommendations] = await connection.query(
-      'SELECT * FROM recommendations WHERE id = ?',
-      [id]
-    );
-    const [votes] = await connection.query(
-      'SELECT COUNT(*) as count FROM votes WHERE recommendation_id = ?',
-      [id]
-    );
-    const [comments] = await connection.query(
-      'SELECT comments.*, users.name FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.recommendation_id = ?',
-      [id]
-    );
+    const recommendations = await getRecommendationById(id);
 
     if (recommendations.length === 0) {
       return res.status(404).json({ error: 'Recommendation not found' });
     }
-
     const recommendation = recommendations[0];
 
-    res.status(200).json({ recommendation, votes: votes[0].count, comments });
+    res.status(200).json({ recommendation });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  } finally {
-    if (connection) {
-      connection.release();
-    }
+    console.log(err);
+    throw generateError('Recommendation not found', 404);
   }
 };
 
@@ -117,90 +108,48 @@ const getRecommendationsByLocationAndCategoryController = async (
   res,
   next
 ) => {
-  let connection;
-
   try {
-    const { error, value } =
-      getRecommendationsByLocationAndCategorySchema.validate(req.query);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
-    connection = await getConnection();
-    const { location, category } = req.query;
+    const localization = req.query.localization || '';
+    const category = req.query.category || '';
 
-    let searchQuery = 'SELECT * FROM recommendations WHERE 1=1';
-    let searchParams = [];
-
-    if (location) {
-      searchQuery += ' AND location = ?';
-      searchParams.push(location);
-    }
-
-    if (category) {
-      searchQuery += ' AND category = ?';
-      searchParams.push(category);
-    }
-
-    searchQuery +=
-      ' ORDER BY (SELECT COUNT(*) FROM votes WHERE votes.recommendation_id = recommendations.id) DESC';
-
-    const [rows] = await connection.query(searchQuery, searchParams);
-
-    res.status(200).json({ recommendations: rows });
+    const recommendations = await getRecommendation(localization, category);
+    res.send({
+      status: 'OK',
+      data: recommendations,
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  } finally {
-    if (connection) connection.release();
+    console.log(err);
+    throw generateError('dont exist', 404);
   }
 };
 
 const getRecommendationOrderedByVotesController = async (req, res, next) => {
-  let connection;
-
   try {
-    connection = await getConnection();
-    const query = `
-      SELECT r.*, COUNT(v.value) AS votes
-      FROM recommendations r
-      LEFT JOIN votes v ON v.recommendation_id = r.id
-      GROUP BY r.id
-      ORDER BY votes DESC
-    `;
+    const query = await recommendationOrderedByVotes();
 
     const [rows] = await connection.query(query);
 
     res.status(200).json({ recommendations: rows });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  } finally {
-    if (connection) connection.release();
+    throw generateError('server error', 500);
   }
 };
 
 const getRecommendationByUserController = async (req, res, next) => {
-  let connection;
-
   try {
-    connection = await getConnection();
-
     const { error } = idRecommendationSchema.validate(req.params);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
 
     const userId = req.params.id;
-    const [rows] = await connection.query(
-      'SELECT * FROM recommendations WHERE user_id = ?',
-      [userId]
-    );
-    res.status(200).json({ recommendations: rows });
+
+    const query = await recommendationByUser(userId);
+
+    res.status(200).json({ recommendations: query });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  } finally {
-    if (connection) connection.release();
+    console.log(err);
+    throw generateError('this user doesnt have recommendations', 500);
   }
 };
 

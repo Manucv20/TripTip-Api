@@ -1,16 +1,16 @@
 const { getConnection } = require('./db');
+const { generateError } = require('../helpers');
 const createComments = async (
   user_id,
   recommendation_id,
-  comment,
-  image = ''
+  comment
 ) => {
   let connection;
   try {
     connection = await getConnection();
     const [result] = await connection.query(
-      'INSERT INTO comments (user_id, recommendation_id, comment, image) VALUES (?, ?, ?, ?)',
-      [user_id, recommendation_id, comment, image]
+      'INSERT INTO comments (user_id, recommendation_id, comment) VALUES (?, ?, ?)',
+      [user_id, recommendation_id, comment]
     );
     return result.insertId;
   } finally {
@@ -27,14 +27,9 @@ const getCommentsByRecommendations = async (req, res) => {
       [recommendationId]
     );
     if (result.length === 0) {
-      return res
-        .status(404)
-        .json({ message: 'No comments found for this recommendation' });
+    throw generateError('No comments found for this recommendation', 404);
     }
     return res.status(200).json({ comments: result });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
   } finally {
     if (connection) connection.release();
   }
@@ -49,7 +44,7 @@ const getCommentById = async (commentId) => {
       [commentId]
     );
     if (!result.length) {
-      throw new Error('Comment not found');
+      throw generateError('Comment not found', 404);
     }
     return result[0];
   } finally {

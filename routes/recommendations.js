@@ -17,13 +17,19 @@ router.post('/recommendations/', authUser, newRecommendationController);
 router.delete('/recommendations/:id', authUser, deleteRecommendationController);
 
 // Obtener todas las recomendaciones por localización o categoría
-router.get('/recommendations', getRecommendationsByLocationAndCategoryController);
+router.get(
+  '/recommendations',
+  getRecommendationsByLocationAndCategoryController
+);
 
 // Obtener recomendación por ID
-router.get('/recommendations/:id', getRecommendationController);
+router.get('/recommendation/:id', getRecommendationController);
 
 // Obtener recomendaciones ordenadas por votos
-router.get('recommendations/orderedByVotes', getRecommendationOrderedByVotesController);
+router.get(
+  '/recommendations/orderedByVotes',
+  getRecommendationOrderedByVotesController
+);
 
 // Obtener recomendaciones de un usuario
 router.get('/users/:id/recommendations', getRecommendationByUserController);

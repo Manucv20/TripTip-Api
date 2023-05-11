@@ -9,8 +9,8 @@ const {
   getCommentById,
 } = require('../db/comments.js');
 const path = require('path');
-const {createPathIfNotExists} = require ('../helpers')
-const sharp = require('sharp')
+const { createPathIfNotExists } = require('../helpers');
+const sharp = require('sharp');
 
 const newCommentController = async (req, res, next) => {
   try {
@@ -19,24 +19,9 @@ const newCommentController = async (req, res, next) => {
       res.status(400).json({ error: error.details[0].message });
       return;
     }
-    let imageFileName;
-    if (req.files && req.files.image){
-  const uploadsDir = path.join(__dirname, '../uploads');
-  await createPathIfNotExists(uploadsDir)
-  const { default: nanoid } = await import('nanoid');
-  const image = sharp(req.files.image.data)
-  imageFileName = `${nanoid(20).jpg}`
-  await image.toFile(path.join(uploadsDir, imageFileName))
 
-    }
-    
     const { user_id, recommendation_id, comment } = req.body;
-    const commentId = await createComments(
-      user_id,
-      recommendation_id,
-      comment,
-      imageFileName
-    );
+    const commentId = await createComments(user_id, recommendation_id, comment);
     return res
       .status(201)
       .json({ message: 'Comment posted successfully', commentId });
