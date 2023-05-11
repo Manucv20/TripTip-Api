@@ -1,16 +1,18 @@
 require('dotenv').config();
+const expressFileUpload = require('express-fileupload');
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
-const expressFileUpload = require('express-fileupload');
 const userRoutes = require('./routes/users');
 const recommendationRoutes = require('./routes/recommendations');
 const votesRoutes = require('./routes/votes');
 const commentsRoutes = require('./routes/comments');
-app.use(morgan('dev'));
 app.use(expressFileUpload());
-app.use(express.json());
 app.use('/uploads', express.static('./uploads'));
+app.use('/uploads', express.static('./uploads/profileImage'));
+app.use('/uploads', express.static('./uploads/recommendationImage'));
+app.use(express.json());
+app.use(morgan('dev'));
 
 //RUTAS
 app.use('/', userRoutes);
