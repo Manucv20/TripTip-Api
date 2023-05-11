@@ -18,6 +18,6 @@ router.post('/user/login', loginController);
 router.put('/user/:id', authUser, updateUserController);
 
 // Obtener usuario por ID
-router.get('/user/:id', authUser, getUserController);
+router.get('/user/:id', getUserController);
 
 module.exports = router;
