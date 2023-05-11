@@ -15,6 +15,7 @@ const authUser = (req, res, next) => {
       throw generateError('Invalid token', 401);
     }
     req.auth = token;
+    req.userId = token.userId;
 
     next();
   } catch (error) {
