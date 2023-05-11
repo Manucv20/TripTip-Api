@@ -1,0 +1,166 @@
+const { generateError } = require('../helpers');
+const { getConnection } = require('./db');
+
+//Crear una recomendación en la base de datos y devuelve su id
+const createRecommendation = async (
+  userId,
+  title,
+  category,
+  location,
+  sumary,
+  details,
+  image = ''
+) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    //Crear una recomendacion
+    const [newRecommendation] = await connection.query(
+      `
+      INSERT INTO recommendations (user_id, title, category, location, summary, details, image) 
+      VALUES (?,?,?,?,?,?,?);
+    `,
+      [userId, title, category, location, sumary, details, image]
+    );
+
+    //Devolver la id
+    return newRecommendation.insertId;
+  } finally {
+    if (connection) connection.release();
+  }
+};
+//muestra los datos de un registro de la tabla recomendations
+const getRecommendationById = async (id) => {
+  if (!id) {
+    throw generateError('No id provided', 400);
+  }
+  let connection;
+  try {
+    connection = await getConnection();
+
+    const [result] = await connection.query(
+      `
+      SELECT * FROM recommendations WHERE id = ?
+    `,
+      [id]
+    );
+
+    if (result.length === 0) {
+      throw generateError(
+        `The recommendation with id: ${id} does not exist`,
+        404
+      );
+    }
+
+    const [votes] = await connection.query(
+      'SELECT COUNT(*) as count FROM votes WHERE recommendation_id = ?',
+      [id]
+    );
+
+    const [comments] = await connection.query(
+      'SELECT comments.*, users.name FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.recommendation_id = ?',
+      [id]
+    );
+
+    return {
+      ...result[0],
+      votes: votes[0].count,
+      comments: comments,
+    };
+  } finally {
+    if (connection) connection.release();
+  }
+};
+//Muestra el resultado de la busqueda de recomendaciones por lugar o categoria
+const getRecommendation = async (location, category) => {
+  let connection;
+
+  try {
+    connection = await getConnection();
+
+    let searchQuery =
+      'SELECT r.*, (SELECT COUNT(*) FROM votes v WHERE v.recommendation_id = r.id) as votes FROM recommendations r WHERE 1=1';
+    let searchParams = [];
+
+    if (location) {
+      searchQuery += ' AND r.location = ?';
+      searchParams.push(location);
+    }
+
+    if (category) {
+      searchQuery += ' AND r.category = ?';
+      searchParams.push(category);
+    }
+
+    searchQuery += ' ORDER BY votes DESC';
+
+    const [rows] = await connection.query(searchQuery, searchParams);
+
+    return rows;
+  } finally {
+    if (connection) connection.release();
+  }
+};
+//Elimina tu propia recomendación
+const deleteRecommendationById = async (id) => {
+  let connection;
+
+  try {
+    connection = await getConnection();
+
+    await connection.query(
+      `
+      DELETE FROM recommendations WHERE id = ?
+    `,
+      [id]
+    );
+
+    return;
+  } finally {
+    if (connection) connection.release();
+  }
+};
+const recommendationOrderedByVotes = async () => {
+  let connection;
+
+  try {
+    connection = await getConnection();
+    const [query] = await connection.query(`
+      SELECT r.*, COUNT(v.value) AS votes
+      FROM recommendations r
+      LEFT JOIN votes v ON v.recommendation_id = r.id
+      GROUP BY r.id
+      ORDER BY votes DESC
+    `);
+    return query;
+  } finally {
+    if (connection) connection.release();
+  }
+};
+const recommendationByUser = async (id) => {
+  let connection;
+
+  try {
+    connection = await getConnection();
+
+    const [recommendation] = await connection.query(
+      `
+    SELECT * FROM recommendations WHERE user_id = ?
+    `,
+      [id]
+    );
+
+    return recommendation;
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
+module.exports = {
+  createRecommendation,
+  getRecommendation,
+  getRecommendationById,
+  deleteRecommendationById,
+  recommendationOrderedByVotes,
+  recommendationByUser,
+};

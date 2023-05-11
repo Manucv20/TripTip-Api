@@ -1,7 +1,5 @@
-const { getConnection } = require('../db/db.js');
 const { validationResult } = require('express-validator');
-const { generateError } = require('../helpers');
-const Joi = require('joi');
+const { generateError, createPathIfNotExists } = require('../helpers');
 const {
   newUserSchema,
   loginSchema,
@@ -16,13 +14,43 @@ const newUserController = async (req, res) => {
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-    const {name, lastname,address,gender,email,password, profile_image, bio,} = req.body;
-    const insertId = await createUser({name, lastname, address, gender, email, password, profile_image, bio,
+    const { username, name, lastname, address, gender, email, password, bio } =
+      req.body;
+      
+      let imageFileName;
+      
+      if (req.files?.profile_image) {
+        //Creo el path del directorio uploads
+        console.log("Paso el if");
+        const uploadsDir = path.join(__dirname, '../uploads/profileImage');
+        //Creo el directorio si no existe
+        await createPathIfNotExists(uploadsDir);
+        //Procesar la imagen
+        const image = sharp(req.files.image.data);
+        image.resize(256);
+        //Guardo la imagen con un nombre aleatorio en el directorio uploads
+        const { default: nanoid } = await import('nanoid');
+        imageFileName = `${nanoid(20).jpg}`;
+        await image.toFile(path.join(uploadsDir, imageFileName));
+      }
+      
+      const insertId = await createUser({
+      username,
+      name,
+      lastname,
+      address,
+      gender,
+      email,
+      password,
+      imageFileName,
+      bio,
     });
-    res.status(200).json({ message: 'User registered successfully', userId: insertId });
+      res
+      .status(200)
+      .json({ message: 'User registered successfully', userId: insertId });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    throw generateError('the user has not been created', 401);
+    console.log(err);
   }
 };
 
@@ -44,8 +72,7 @@ const loginController = async (req, res, next) => {
 
     res.status(200).json({ token });
   } catch (err) {
-    console.error(err);
-    res.status(401).json({ error: err.message });
+    throw generateError('Invalid email or password', 404);
   }
 };
 
@@ -81,8 +108,7 @@ const updateUserController = async (req, res, next) => {
 
     res.status(200).json({ message: 'Profile updated successfully' });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    throw generateError('the profile has not been updated', 500);
   }
 };
 const getUserController = async (req, res, next) => {
@@ -102,8 +128,7 @@ const getUserController = async (req, res, next) => {
 
     res.status(200).json(user);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    throw generateError('User not found', 500);
   }
 };
 

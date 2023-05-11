@@ -1,5 +1,4 @@
 const { generateError } = require('../helpers');
-require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const authUser = (req, res, next) => {
@@ -14,7 +13,7 @@ const authUser = (req, res, next) => {
     } catch {
       throw generateError('Invalid token', 401);
     }
-    req.auth = token;
+
     req.userId = token.userId;
 
     next();

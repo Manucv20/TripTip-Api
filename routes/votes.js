@@ -4,6 +4,6 @@ const { NewVoteController } = require('../controllers/votes');
 const { authUser } = require('../middlewares/auth');
 
 // Crear un nuevo voto
-router.post('/votes', authUser, NewVoteController);
+router.post('/votes/:id', authUser, NewVoteController);
 
 module.exports = router;
