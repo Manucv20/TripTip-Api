@@ -18,7 +18,7 @@ async function main() {
 
     await connection.query(`CREATE TABLE users (
 id INT PRIMARY KEY AUTO_INCREMENT,
-username VARCHAR(50) NOT NULL,
+username VARCHAR(50) NOT NULL UNIQUE,
 name VARCHAR(50) NOT NULL,
 lastname varchar(50),
 address text not null,
@@ -58,7 +58,6 @@ id INT PRIMARY KEY AUTO_INCREMENT,
 user_id INT NOT NULL,
 recommendation_id INT NOT NULL,
 comment TEXT NOT NULL,
-image VARCHAR(255),
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
 FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE

@@ -1,7 +1,9 @@
 const { getConnection } = require('../db/db.js');
+const { generateError } = require('../helpers');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const createUser = async ({
+  username,
   name,
   lastname,
   address,
@@ -20,15 +22,16 @@ const createUser = async ({
     );
 
     if (user.length > 0) {
-      throw new Error('Email already in use');
+      throw generateError('Email already in use', 409);
     }
 
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const insertUserQuery =
-      'INSERT INTO users (name, lastname, address, gender, email, password, profile_image, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+      'INSERT INTO users (username,name,lastname, address, gender, email, password, profile_image, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
     const insertResult = await connection.query(insertUserQuery, [
+      username,
       name,
       lastname,
       address,
@@ -41,7 +44,11 @@ const createUser = async ({
 
     return insertResult.insertId;
   } catch (error) {
-    throw new Error(error.message);
+    throw generateError(
+      'There is already a user in the database with that username',
+      409
+    );
+    console.log(error);
   } finally {
     if (connection) {
       connection.release();
@@ -60,17 +67,19 @@ const login = async (email, password) => {
     );
 
     if (users.length === 0) {
-      throw new Error('Invalid email or password');
+      throw generateError('Invalid email or password', 404);
     }
 
     const user = users[0];
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new Error('Invalid email or password');
+      throw generateError('Invalid email or password', 404);
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '30d'});
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
+      expiresIn: '30d',
+    });
 
     return token;
   } catch (err) {
@@ -90,8 +99,7 @@ const updateUser = async (
 
   try {
     const updateUserQuery =
-      'UPDATE users SET name = ?, lastname = ?, address = ?, gender = ?, email = ?, profile_image = ?, bio = ? WHERE id = ?';
-
+      'UPDATE users SET  name = ?, lastname = ?, address = ?, gender = ?, email = ?, profile_image = ?, bio = ? WHERE id = ?';
     await connection.query(updateUserQuery, [
       name,
       lastname,
@@ -102,9 +110,6 @@ const updateUser = async (
       bio,
       userId,
     ]);
-  } catch (err) {
-    console.error(err);
-    throw new Error('Error updating user');
   } finally {
     connection.release();
   }
@@ -118,4 +123,33 @@ const getUserById = async (userId) => {
   connection.release();
   return rows[0];
 };
-module.exports = { createUser, login, updateUser, getUserById };
+
+const getUserByUsername = async (username) => {
+  let connection;
+
+  try {
+    connection = await getConnection();
+
+    const [result] = await connection.query(
+      `
+      SELECT *  FROM users WHERE username=?
+    `,
+      [username]
+    );
+
+    if (result.length === 0) {
+      throw generateError('There is no user with that email', 404);
+    }
+
+    return result[0];
+  } finally {
+    if (connection) connection.release();
+  }
+};
+module.exports = {
+  createUser,
+  login,
+  updateUser,
+  getUserById,
+  getUserByUsername,
+};
