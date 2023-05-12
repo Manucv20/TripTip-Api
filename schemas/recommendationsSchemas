@@ -1,13 +1,11 @@
 const Joi = require('joi');
 
 const newRecommendationSchema = Joi.object({
-  user_id: Joi.number().required(),
   title: Joi.string().required(),
   category: Joi.string().required(),
   location: Joi.string().required(),
   summary: Joi.string().required(),
   details: Joi.string().required(),
-  image: Joi.string().required(),
 });
 
 const idRecommendationSchema = Joi.object({

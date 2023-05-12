@@ -7,7 +7,15 @@ const {
   getUserSchema,
   userSchema,
 } = require('../schemas/usersSchemas');
+
 const { createUser, login, updateUser, getUserById } = require('../db/users');
+const path = require('path');
+const sharp = require('sharp');
+const crypto = require('crypto');
+
+// Genera un nombre aleatorio de N caracteres para la imagen
+const randomName = (n) => crypto.randomBytes(n).toString('hex');
+
 const newUserController = async (req, res) => {
   try {
     const { error, value } = newUserSchema.validate(req.body);
@@ -16,25 +24,8 @@ const newUserController = async (req, res) => {
     }
     const { username, name, lastname, address, gender, email, password, bio } =
       req.body;
-      
-      let imageFileName;
-      
-      if (req.files?.profile_image) {
-        //Creo el path del directorio uploads
-        console.log("Paso el if");
-        const uploadsDir = path.join(__dirname, '../uploads/profileImage');
-        //Creo el directorio si no existe
-        await createPathIfNotExists(uploadsDir);
-        //Procesar la imagen
-        const image = sharp(req.files.image.data);
-        image.resize(256);
-        //Guardo la imagen con un nombre aleatorio en el directorio uploads
-        const { default: nanoid } = await import('nanoid');
-        imageFileName = `${nanoid(20).jpg}`;
-        await image.toFile(path.join(uploadsDir, imageFileName));
-      }
-      
-      const insertId = await createUser({
+
+    const insertId = await createUser({
       username,
       name,
       lastname,
@@ -42,10 +33,9 @@ const newUserController = async (req, res) => {
       gender,
       email,
       password,
-      imageFileName,
       bio,
     });
-      res
+    res
       .status(200)
       .json({ message: 'User registered successfully', userId: insertId });
   } catch (err) {
@@ -93,22 +83,47 @@ const updateUserController = async (req, res, next) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const { name, lastname, address, gender, email, profile_image, bio } =
-      value;
+    const { name, lastname, address, gender, email, bio } = value;
 
-    await updateUser(userId, {
+    let imageFileName;
+
+    if (req.files?.profile_image) {
+      //Creo el path del directorio uploads
+      const uploadsDir = path.join(__dirname, '../uploads/profileImage');
+      //Creo el directorio si no existe
+      await createPathIfNotExists(uploadsDir);
+      //Procesar la imagen
+      const image = sharp(req.files.profile_image.data);
+      //verifico que el archivo contenga las extensiones jpg o png
+      const fileName = req.files.profile_image.name;
+      if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
+        image.resize(256);
+      } else {
+        throw generateError(
+          'You must enter an image with jpg or png extension',
+          400
+        );
+      }
+      //Guardo la imagen con un nombre aleatorio en el directorio uploads
+      imageFileName = `${randomName(16)}.jpg`;
+
+      await image.toFile(path.join(uploadsDir, imageFileName));
+    }
+
+    await updateUser(
+      userId,
       name,
       lastname,
       address,
       gender,
       email,
-      profile_image,
-      bio,
-    });
+      imageFileName,
+      bio
+    );
 
     res.status(200).json({ message: 'Profile updated successfully' });
   } catch (err) {
-    throw generateError('the profile has not been updated', 500);
+    next(err);
   }
 };
 const getUserController = async (req, res, next) => {
