@@ -7,4 +7,5 @@ const newVoteSchema = Joi.object({
 });
 
 module.exports = {
-  newVoteSchema}
+  newVoteSchema,
+};
