@@ -13,37 +13,22 @@ const {
   recommendationByUser,
   checkRecommendationExists,
 } = require('../db/recommendations');
+
+const path = require('path');
+const sharp = require('sharp');
+const crypto = require('crypto');
+
+// Genera un nombre aleatorio de N caracteres para la imagen
+const randomName = (n) => crypto.randomBytes(n).toString('hex');
+
 const newRecommendationController = async (req, res, next) => {
   try {
     const { error } = newRecommendationSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-    const { user_id, title, category, location, summary, details, image } =
-      req.body;
+    const { title, category, location, summary, details } = req.body;
 
-    const recommendationExists = await checkRecommendationExists(
-      user_id,
-      title,
-      category,
-      location,
-      summary,
-      details
-    );
-
-    if (recommendationExists) {
-      throw generateError('Cannot post duplicate recommendation', 400);
-    }
-
-    const query = await createRecommendation(
-      user_id,
-      title,
-      category,
-      location,
-      summary,
-      details,
-      image
-    );
 
     let imageFileName;
 
@@ -53,20 +38,39 @@ const newRecommendationController = async (req, res, next) => {
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
       //Procesar la imagen
-      const profile_image = sharp(req.files.image.data);
-      profile_image.resize(256);
+      const image = sharp(req.files.image.data);
+      //verifico que el archivo contenga las extensiones jpg o png
+      const fileName = req.files.image.name;
+      if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
+        image.resize(256);
+      } else {
+        throw generateError(
+          'You must enter an image with jpg or png extension',
+          400
+        );
+      }
       //Guardo la imagen con un nombre aleatorio en el directorio uploads
-      const { default: nanoid } = await import('nanoid');
-      imageFileName = `${nanoid(20).jpg}`;
+      imageFileName = `${randomName(16)}.jpg`;
+
       await image.toFile(path.join(uploadsDir, imageFileName));
     }
+
+    const query = await createRecommendation(
+      req.userId,
+      title,
+      category,
+      location,
+      summary,
+      details,
+      imageFileName
+    );
+
     res.status(200).json({
       message: 'Recommendation created successfully',
       recommendation_id: query.insertId,
     });
   } catch (err) {
-    console.log(err);
-    throw generateError('Recommendation didnt create successfully', 500);
+    next(err);
   }
 };
 

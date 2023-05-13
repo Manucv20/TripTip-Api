@@ -10,7 +10,6 @@ const createUser = async ({
   gender,
   email,
   password,
-  profile_image,
   bio,
 }) => {
   let connection;
@@ -29,7 +28,7 @@ const createUser = async ({
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const insertUserQuery =
-      'INSERT INTO users (username,name,lastname, address, gender, email, password, profile_image, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      'INSERT INTO users (username,name,lastname, address, gender, email, password, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
     const insertResult = await connection.query(insertUserQuery, [
       username,
       name,
@@ -38,7 +37,6 @@ const createUser = async ({
       gender,
       email,
       hashedPassword,
-      profile_image,
       bio,
     ]);
 
@@ -93,10 +91,15 @@ const login = async (email, password) => {
 
 const updateUser = async (
   userId,
-  { name, lastname, address, gender, email, profile_image, bio }
+  name,
+  lastname,
+  address,
+  gender,
+  email,
+  profile_image,
+  bio
 ) => {
   const connection = await getConnection();
-
   try {
     const updateUserQuery =
       'UPDATE users SET  name = ?, lastname = ?, address = ?, gender = ?, email = ?, profile_image = ?, bio = ? WHERE id = ?';
