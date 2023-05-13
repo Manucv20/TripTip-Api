@@ -15,6 +15,7 @@ const createRecommendation = async (
   try {
     connection = await getConnection();
     //Crear una recomendacion
+
     const [newRecommendation] = await connection.query(
       `
       INSERT INTO recommendations (user_id, title, category, location, summary, details, image) 
@@ -62,11 +63,13 @@ const getRecommendationById = async (id) => {
       [id]
     );
 
-    return {
-      ...result[0],
+    const recommendation = {
+      result: result[0],
       votes: votes[0].count,
       comments: comments,
     };
+
+    return [recommendation];
   } finally {
     if (connection) connection.release();
   }
@@ -156,6 +159,33 @@ const recommendationByUser = async (id) => {
   }
 };
 
+const checkRecommendationExists = async (
+  userId,
+  title,
+  category,
+  location,
+  summary,
+  details
+) => {
+  let connection;
+  try {
+    connection = await getConnection();
+    const [existingRecommendation] = await connection.query(
+      `
+      SELECT id
+      FROM recommendations
+      WHERE user_id = ? AND title = ? AND category = ? AND location = ? AND summary = ? AND details = ?
+      LIMIT 1
+    `,
+      [userId, title, category, location, summary, details]
+    );
+
+    return existingRecommendation.length > 0;
+  } finally {
+    if (connection) connection.release();
+  }
+};
+
 module.exports = {
   createRecommendation,
   getRecommendation,
@@ -163,4 +193,5 @@ module.exports = {
   deleteRecommendationById,
   recommendationOrderedByVotes,
   recommendationByUser,
+  checkRecommendationExists,
 };

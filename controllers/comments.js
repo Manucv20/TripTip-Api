@@ -39,7 +39,7 @@ const getCommentsByRecommendationsController = async (req, res, next) => {
 
     const comments = await getCommentsByRecommendations(req, res);
 
-    res.status(200).json({ comments: rows });
+    res.status(200).json({ comments: comments });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
