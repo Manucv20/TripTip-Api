@@ -89,9 +89,11 @@ const updateUserController = async (req, res, next) => {
 
     if (req.files?.profile_image) {
       //Creo el path del directorio uploads
-      const uploadsDir = path.join(__dirname, '../uploads/profileImage');
+      const uploadsDir = path.join(__dirname, '../uploads');
+      const profileImageDir = path.join(__dirname, '../uploads/profileImage');
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
+      await createPathIfNotExists(profileImageDir);
       //Procesar la imagen
       const image = sharp(req.files.profile_image.data);
       //verifico que el archivo contenga las extensiones jpg o png
