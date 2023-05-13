@@ -77,10 +77,14 @@ const deleteRecommendationController = async (req, res, next) => {
       throw new Error(error.details[0].message);
     }
     const { id } = req.params;
+    console.log(id);
+    console.log(req.userId);
 
-    const deleteQuery = await getRecommendationById(id);
+    const [deleteQuery] = await getRecommendationById(id);
 
-    if (req.userId !== deleteQuery.user_id) {
+    console.log(deleteQuery.result.user_id);
+
+    if (req.userId !== deleteQuery.result.user_id) {
       throw generateError(
         'You cant delete a recommendation that doesnt belong to you',
         401
