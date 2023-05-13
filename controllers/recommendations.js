@@ -11,6 +11,7 @@ const {
   deleteRecommendationById,
   recommendationOrderedByVotes,
   recommendationByUser,
+  checkRecommendationExists,
 } = require('../db/recommendations');
 
 const path = require('path');
@@ -27,6 +28,7 @@ const newRecommendationController = async (req, res, next) => {
       return res.status(400).json({ error: error.details[0].message });
     }
     const { title, category, location, summary, details } = req.body;
+
 
     let imageFileName;
 
@@ -79,10 +81,14 @@ const deleteRecommendationController = async (req, res, next) => {
       throw new Error(error.details[0].message);
     }
     const { id } = req.params;
+    console.log(id);
+    console.log(req.userId);
 
-    const deleteQuery = await getRecommendationById(id);
+    const [deleteQuery] = await getRecommendationById(id);
 
-    if (req.userId !== deleteQuery.user_id) {
+    console.log(deleteQuery.result.user_id);
+
+    if (req.userId !== deleteQuery.result.user_id) {
       throw generateError(
         'You cant delete a recommendation that doesnt belong to you',
         401
@@ -125,9 +131,8 @@ const getRecommendationsByLocationAndCategoryController = async (
   next
 ) => {
   try {
-    const localization = req.query.localization || '';
+    const localization = req.query.location || '';
     const category = req.query.category || '';
-
     const recommendations = await getRecommendation(localization, category);
     res.send({
       status: 'OK',
@@ -143,11 +148,9 @@ const getRecommendationOrderedByVotesController = async (req, res, next) => {
   try {
     const query = await recommendationOrderedByVotes();
 
-    const [rows] = await connection.query(query);
-
-    res.status(200).json({ recommendations: rows });
+    res.status(200).json({ recommendations: query });
   } catch (err) {
-    throw generateError('server error', 500);
+    throw generateError('Server error', 500);
   }
 };
 
