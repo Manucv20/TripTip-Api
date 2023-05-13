@@ -11,6 +11,7 @@ const createPathIfNotExists = async (path) => {
     await fs.access(path);
   } catch {
     await fs.mkdir(path);
+    console.log('Llego aqui');
   }
 };
 module.exports = {
