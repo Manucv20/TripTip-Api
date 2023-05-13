@@ -34,9 +34,11 @@ const newRecommendationController = async (req, res, next) => {
 
     if (req.files?.image) {
       //Creo el path del directorio uploads
-      const uploadsDir = path.join(__dirname, '../uploads/recommendationImage');
+      const uploadsDir = path.join(__dirname, '../uploads');
+      const recomImgDir = path.join(__dirname, '../uploads/recommendationImage');
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
+      await createPathIfNotExists(recomImgDir);
       //Procesar la imagen
       const image = sharp(req.files.image.data);
       //verifico que el archivo contenga las extensiones jpg o png
