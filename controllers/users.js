@@ -1,29 +1,39 @@
 const { validationResult } = require('express-validator');
 const { generateError, createPathIfNotExists } = require('../helpers');
-const {
-  newUserSchema,
-  loginSchema,
-  updateUserSchema,
-  getUserSchema,
-  userSchema,
-} = require('../schemas/usersSchemas');
-
-const { createUser, login, updateUser, getUserById } = require('../db/users');
 const path = require('path');
 const sharp = require('sharp');
 const crypto = require('crypto');
 
+const {
+  userSchema,
+  loginSchema,
+  updateUserSchema,
+  getUserSchema,
+} = require('../schemas/usersSchemas');
+
+const {
+  createUser,
+  login,
+  updateUser,
+  getUserById,
+  getUserByUsername,
+} = require('../db/users');
+
 // Genera un nombre aleatorio de N caracteres para la imagen
 const randomName = (n) => crypto.randomBytes(n).toString('hex');
 
-const newUserController = async (req, res, next) => {
+const validateNewUser = (req, res, next) => {
+  const { error } = userSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
+  next();
+};
+
+const createNewUser = async (req, res) => {
   try {
-    const { error, value } = newUserSchema.validate(req.body);
-    if (error) {
-      return res.status(409).json({ error: error.details[0].message });
-    }
-    const { username, name, lastname, address, gender, email, password } =
-      value;
+    const { username, name, lastname, address, gender, email, password, bio } =
+      req.body;
 
     const insertId = await createUser({
       username,
@@ -42,9 +52,11 @@ const newUserController = async (req, res, next) => {
   }
 };
 
-const loginController = async (req, res, next) => {
+const newUserController = [validateNewUser, createNewUser];
+
+const loginController = async (req, res) => {
   try {
-    const { error, value } = loginSchema.validate(req.body);
+    const { error } = loginSchema.validate(req.body);
 
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
@@ -126,7 +138,7 @@ const updateUserController = async (req, res, next) => {
 };
 const getUserController = async (req, res, next) => {
   try {
-    const { error, value } = getUserSchema.validate(req.params);
+    const { error } = getUserSchema.validate(req.params);
 
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
@@ -136,12 +148,12 @@ const getUserController = async (req, res, next) => {
     const user = await getUserById(user_id);
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw generateError('User not found', 404, { userId: user_id });
     }
 
     res.status(200).json(user);
   } catch (err) {
-    throw generateError('User not found', 500);
+    next(err);
   }
 };
 
