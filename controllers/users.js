@@ -16,14 +16,14 @@ const crypto = require('crypto');
 // Genera un nombre aleatorio de N caracteres para la imagen
 const randomName = (n) => crypto.randomBytes(n).toString('hex');
 
-const newUserController = async (req, res) => {
+const newUserController = async (req, res, next) => {
   try {
     const { error, value } = newUserSchema.validate(req.body);
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      return res.status(409).json({ error: error.details[0].message });
     }
-    const { username, name, lastname, address, gender, email, password, bio } =
-      req.body;
+    const { username, name, lastname, address, gender, email, password } =
+      value;
 
     const insertId = await createUser({
       username,
@@ -33,14 +33,12 @@ const newUserController = async (req, res) => {
       gender,
       email,
       password,
-      bio,
     });
     res
       .status(200)
       .json({ message: 'User registered successfully', userId: insertId });
   } catch (err) {
-    throw generateError('the user has not been created', 401);
-    console.log(err);
+    next(err);
   }
 };
 
@@ -51,24 +49,22 @@ const loginController = async (req, res, next) => {
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: errors.array()[0].msg });
-    }
 
-    const { email, password } = req.body;
+    const { email, password } = value;
 
     const token = await login(email, password);
 
     res.status(200).json({ token });
   } catch (err) {
-    throw generateError('Invalid email or password', 404);
+    // throw generateError('Invalid email or password', 404);
+    next(err);
   }
 };
 
 const updateUserController = async (req, res, next) => {
   try {
     const userId = req.params.id;
+    console.log(req.userId);
 
     // Validar datos de entrada
     const { error, value } = updateUserSchema.validate(req.body);
