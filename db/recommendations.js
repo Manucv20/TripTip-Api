@@ -1,5 +1,5 @@
-const { generateError } = require('../helpers');
-const { getConnection } = require('./db');
+const { generateError } = require("../helpers");
+const { getConnection } = require("./db");
 
 //Crear una recomendación en la base de datos y devuelve su id
 const createRecommendation = async (
@@ -9,7 +9,7 @@ const createRecommendation = async (
   location,
   sumary,
   details,
-  image = ''
+  image = ""
 ) => {
   let connection;
   try {
@@ -33,7 +33,7 @@ const createRecommendation = async (
 //muestra los datos de un registro de la tabla recomendations
 const getRecommendationById = async (id) => {
   if (!id) {
-    throw generateError('No id provided', 400);
+    throw generateError("No id provided", 400);
   }
   let connection;
   try {
@@ -54,12 +54,12 @@ const getRecommendationById = async (id) => {
     }
 
     const [votes] = await connection.query(
-      'SELECT COUNT(*) as count FROM votes WHERE recommendation_id = ?',
+      "SELECT COUNT(*) as count FROM votes WHERE recommendation_id = ?",
       [id]
     );
 
     const [comments] = await connection.query(
-      'SELECT comments.*, users.name FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.recommendation_id = ?',
+      "SELECT comments.*, users.name FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.recommendation_id = ?",
       [id]
     );
 
@@ -82,20 +82,20 @@ const getRecommendation = async (location, category) => {
     connection = await getConnection();
 
     let searchQuery =
-      'SELECT r.*, (SELECT COUNT(*) FROM votes v WHERE v.recommendation_id = r.id) as votes FROM recommendations r WHERE 1=1';
+      "SELECT r.*, (SELECT COUNT(*) FROM votes v WHERE v.recommendation_id = r.id) as votes FROM recommendations r WHERE 1=1";
     let searchParams = [];
 
     if (location) {
-      searchQuery += ' AND r.location = ?';
+      searchQuery += " AND r.location = ?";
       searchParams.push(location);
     }
 
     if (category) {
-      searchQuery += ' AND r.category = ?';
+      searchQuery += " AND r.category = ?";
       searchParams.push(category);
     }
 
-    searchQuery += ' ORDER BY votes DESC';
+    searchQuery += " ORDER BY votes DESC";
 
     const [rows] = await connection.query(searchQuery, searchParams);
 
@@ -153,6 +153,9 @@ const recommendationByUser = async (id) => {
       [id]
     );
 
+    if (recommendation.length === 0) {
+      throw generateError("This user doesn't have recommendations", 404);
+    }
     return recommendation;
   } finally {
     if (connection) connection.release();
@@ -166,7 +169,7 @@ const updateRecommendation = async (
   location,
   summary,
   details,
-  image = '',
+  image = "",
   id
 ) => {
   let connection;

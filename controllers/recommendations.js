@@ -1,8 +1,8 @@
-const { generateError, createPathIfNotExists } = require('../helpers');
+const { generateError, createPathIfNotExists } = require("../helpers");
 const {
   newRecommendationSchema,
   idRecommendationSchema,
-} = require('../schemas/recommendationsSchemas');
+} = require("../schemas/recommendationsSchemas");
 const {
   createRecommendation,
   getRecommendation,
@@ -11,14 +11,14 @@ const {
   recommendationOrderedByVotes,
   recommendationByUser,
   updateRecommendation,
-} = require('../db/recommendations');
+} = require("../db/recommendations");
 
-const path = require('path');
-const sharp = require('sharp');
-const crypto = require('crypto');
+const path = require("path");
+const sharp = require("sharp");
+const crypto = require("crypto");
 
 // Genera un nombre aleatorio de N caracteres para la imagen
-const randomName = (n) => crypto.randomBytes(n).toString('hex');
+const randomName = (n) => crypto.randomBytes(n).toString("hex");
 
 const newRecommendationController = async (req, res, next) => {
   try {
@@ -32,10 +32,10 @@ const newRecommendationController = async (req, res, next) => {
 
     if (req.files?.image) {
       //Creo el path del directorio uploads
-      const uploadsDir = path.join(__dirname, '../uploads');
+      const uploadsDir = path.join(__dirname, "../uploads");
       const recomImgDir = path.join(
         __dirname,
-        '../uploads/recommendationImage'
+        "../uploads/recommendationImage"
       );
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
@@ -44,11 +44,11 @@ const newRecommendationController = async (req, res, next) => {
       const image = sharp(req.files.image.data);
       //verifico que el archivo contenga las extensiones jpg o png
       const fileName = req.files.image.name;
-      if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
+      if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
         image.resize(256);
       } else {
         throw generateError(
-          'You must enter an image with jpg or png extension',
+          "You must enter an image with jpg or png extension",
           400
         );
       }
@@ -69,7 +69,7 @@ const newRecommendationController = async (req, res, next) => {
     );
 
     res.status(200).json({
-      message: 'Recommendation created successfully',
+      message: "Recommendation created successfully",
       recommendation_id: query.insertId,
     });
   } catch (err) {
@@ -93,14 +93,14 @@ const deleteRecommendationController = async (req, res, next) => {
 
     if (req.userId !== deleteQuery.result.user_id) {
       throw generateError(
-        'You cant delete a recommendation that doesnt belong to you',
+        "You cant delete a recommendation that doesnt belong to you",
         401
       );
     }
 
     await deleteRecommendationById(id);
 
-    res.status(200).json({ message: 'Recommendation deleted successfully' });
+    res.status(200).json({ message: "Recommendation deleted successfully" });
   } catch (err) {
     next(err);
   }
@@ -116,7 +116,7 @@ const getRecommendationController = async (req, res, next) => {
     const recommendations = await getRecommendationById(id);
 
     if (recommendations.length === 0) {
-      return res.status(404).json({ error: 'Recommendation not found' });
+      return res.status(404).json({ error: "Recommendation not found" });
     }
     const recommendation = recommendations[0];
 
@@ -132,11 +132,11 @@ const getRecommendationsByLocationAndCategoryController = async (
   next
 ) => {
   try {
-    const localization = req.query.location || '';
-    const category = req.query.category || '';
+    const localization = req.query.location || "";
+    const category = req.query.category || "";
     const recommendations = await getRecommendation(localization, category);
     res.send({
-      status: 'OK',
+      status: "OK",
       data: recommendations,
     });
   } catch (err) {
@@ -150,7 +150,7 @@ const getRecommendationOrderedByVotesController = async (req, res, next) => {
 
     res.status(200).json({ recommendations: query });
   } catch (err) {
-    throw generateError('Server error', 500);
+    throw generateError("Server error", 500);
   }
 };
 
@@ -167,8 +167,7 @@ const getRecommendationByUserController = async (req, res, next) => {
 
     res.status(200).json({ recommendations: query });
   } catch (err) {
-    console.log(err);
-    throw generateError('this user doesnt have recommendations', 500);
+    next(err);
   }
 };
 
@@ -180,16 +179,24 @@ const updateRecommendationController = async (req, res, next) => {
     }
     const { title, category, location, summary, details } = value;
     const { id } = req.params;
-    console.log(id);
+
+    const [updateQuery] = await getRecommendationById(id);
+
+    if (req.userId !== updateQuery.result.user_id) {
+      throw generateError(
+        "You can't a recommendation that doesnt belong to you",
+        401
+      );
+    }
 
     let imageFileName;
 
     if (req.files?.image) {
       //Creo el path del directorio uploads
-      const uploadsDir = path.join(__dirname, '../uploads');
+      const uploadsDir = path.join(__dirname, "../uploads");
       const recomImgDir = path.join(
         __dirname,
-        '../uploads/recommendationImage'
+        "../uploads/recommendationImage"
       );
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
@@ -198,11 +205,11 @@ const updateRecommendationController = async (req, res, next) => {
       const image = sharp(req.files.image.data);
       //verifico que el archivo contenga las extensiones jpg o png
       const fileName = req.files.image.name;
-      if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
+      if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
         image.resize(256);
       } else {
         throw generateError(
-          'You must enter an image with jpg or png extension',
+          "You must enter an image with jpg or png extension",
           400
         );
       }
@@ -224,7 +231,7 @@ const updateRecommendationController = async (req, res, next) => {
     );
 
     res.status(200).json({
-      message: 'Recommendation updated successfully',
+      message: "Recommendation updated successfully",
       recommendation_id: query.insertId,
     });
   } catch (err) {
