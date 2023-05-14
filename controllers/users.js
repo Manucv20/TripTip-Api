@@ -120,20 +120,31 @@ const updateUserController = async (req, res, next) => {
       await image.toFile(path.join(uploadsDir, imageFileName));
     }
 
-    await updateUser(
-      userId,
-      username,
-      name,
-      lastname,
-      address,
-      gender,
-      email,
-      password,
-      imageFileName,
-      bio
-    );
+    try {
+      await updateUser(
+        userId,
+        username,
+        name,
+        lastname,
+        address,
+        gender,
+        email,
+        password,
+        imageFileName,
+        bio
+      );
 
-    res.status(200).json({ message: "Profile updated successfully" });
+      res.status(200).json({ message: "Profile updated successfully" });
+    } catch (err) {
+      if (err.code === "ER_DUP_ENTRY") {
+        return res.status(400).json({
+          error:
+            "Username or email already exists. Please choose a different username.",
+        });
+      }
+
+      throw err; // Lanzar el error para ser manejado por el manejador de errores global
+    }
   } catch (err) {
     next(err);
   }
