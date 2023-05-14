@@ -1,30 +1,39 @@
 const { validationResult } = require('express-validator');
 const { generateError, createPathIfNotExists } = require('../helpers');
-const {
-  newUserSchema,
-  loginSchema,
-  updateUserSchema,
-  getUserSchema,
-  userSchema,
-} = require('../schemas/usersSchemas');
-
-const { createUser, login, updateUser, getUserById } = require('../db/users');
 const path = require('path');
 const sharp = require('sharp');
 const crypto = require('crypto');
 
+const {
+  userSchema,
+  loginSchema,
+  updateUserSchema,
+  getUserSchema,
+} = require('../schemas/usersSchemas');
+
+const {
+  createUser,
+  login,
+  updateUser,
+  getUserById,
+  getUserByUsername,
+} = require('../db/users');
+
 // Genera un nombre aleatorio de N caracteres para la imagen
 const randomName = (n) => crypto.randomBytes(n).toString('hex');
 
-const newUserController = async (req, res) => {
+const validateNewUser = (req, res, next) => {
+  const { error } = userSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
+  next();
+};
+
+const createNewUser = async (req, res, next) => {
   try {
-    const { error, value } = newUserSchema.validate(req.body);
-    if (error) {
-      return res.status(400).json({ error: error.details[0].message });
-    }
     const { username, name, lastname, address, gender, email, password, bio } =
       req.body;
-
     const insertId = await createUser({
       username,
       name,
@@ -39,10 +48,14 @@ const newUserController = async (req, res) => {
       .status(200)
       .json({ message: 'User registered successfully', userId: insertId });
   } catch (err) {
-    throw generateError('the user has not been created', 401);
     console.log(err);
+    res
+      .status(500)
+      .json({ error: 'An error occurred while creating the user' });
   }
 };
+
+const newUserController = [validateNewUser, createNewUser];
 
 const loginController = async (req, res, next) => {
   try {
@@ -140,12 +153,12 @@ const getUserController = async (req, res, next) => {
     const user = await getUserById(user_id);
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      throw generateError('User not found', 404, { userId: user_id });
     }
 
     res.status(200).json(user);
   } catch (err) {
-    throw generateError('User not found', 500);
+    next(err);
   }
 };
 
