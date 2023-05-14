@@ -1,11 +1,11 @@
-const Joi = require('joi');
+const Joi = require("joi");
 
 const userSchema = Joi.object({
   username: Joi.string().required(),
   name: Joi.string().required(),
   lastname: Joi.string().required(),
   address: Joi.string().required(),
-  gender: Joi.string().valid('male', 'female', 'other').lowercase().required(),
+  gender: Joi.string().valid("male", "female", "other").lowercase().required(),
   email: Joi.string().email().required(),
   password: Joi.string().min(8).required(),
   profile_image: Joi.string().allow(null),
@@ -14,13 +14,13 @@ const userSchema = Joi.object({
 
 const loginSchema = Joi.object({
   email: Joi.string().email().required().messages({
-    'string.email': 'Please enter a valid email address',
-    'any.required': 'Email address is required',
+    "string.email": "Please enter a valid email address",
+    "any.required": "Email address is required",
   }),
   password: Joi.string().min(8).max(50).required().messages({
-    'string.min': 'Password must be at least {#limit} characters long',
-    'string.max': 'Password must not exceed {#limit} characters long',
-    'any.required': 'Password is required',
+    "string.min": "Password must be at least {#limit} characters long",
+    "string.max": "Password must not exceed {#limit} characters long",
+    "any.required": "Password is required",
   }),
 });
 
@@ -29,8 +29,9 @@ const updateUserSchema = Joi.object({
   name: Joi.string(),
   lastname: Joi.string(),
   address: Joi.string(),
-  gender: Joi.string().valid('male', 'female', 'other').lowercase(),
+  gender: Joi.string().valid("male", "female", "other").lowercase(),
   email: Joi.string().email(),
+  password: Joi.string().min(8),
   profile_image: Joi.string().allow(null).empty(false),
   bio: Joi.string().allow(null).empty(false),
 });
