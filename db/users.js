@@ -2,6 +2,7 @@ const { getConnection } = require('../db/db.js');
 const { generateError } = require('../helpers');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+
 const createUser = async ({
   username,
   name,
@@ -21,7 +22,10 @@ const createUser = async ({
     );
 
     if (user.length > 0) {
-      throw generateError('Email already in use', 409);
+      throw generateError(
+        'A user with this email already exists in the database',
+        409
+      );
     }
 
     const saltRounds = 10;
@@ -42,11 +46,13 @@ const createUser = async ({
 
     return insertResult.insertId;
   } catch (error) {
-    throw generateError(
-      'There is already a user in the database with that username',
-      409
-    );
-    console.log(error);
+    if (error.code === 'ER_DUP_ENTRY') {
+      throw generateError(
+        'A user with this email already exists in the database',
+        409
+      );
+    }
+    throw generateError('An error occurred while creating the user', 500);
   } finally {
     if (connection) {
       connection.release();
@@ -59,7 +65,7 @@ const login = async (email, password) => {
   try {
     connection = await getConnection();
 
-    const [users] = await connection.query(
+    const [users] = await connection.execute(
       'SELECT * FROM users WHERE email = ?',
       [email]
     );
@@ -79,9 +85,16 @@ const login = async (email, password) => {
       expiresIn: '30d',
     });
 
-    return token;
+    const userData = {
+      id: user.id,
+      username: user.username,
+      name: user.name,
+      email: user.email,
+    };
+
+    return { token, userData };
   } catch (err) {
-    throw new Error(err.message);
+    throw generateError('Invalid email or password', 404);
   } finally {
     if (connection) {
       connection.release();
@@ -99,8 +112,9 @@ const updateUser = async (
   profile_image,
   bio
 ) => {
-  const connection = await getConnection();
+  let connection;
   try {
+    connection = await getConnection();
     const updateUserQuery =
       'UPDATE users SET  name = ?, lastname = ?, address = ?, gender = ?, email = ?, profile_image = ?, bio = ? WHERE id = ?';
     await connection.query(updateUserQuery, [
@@ -113,8 +127,12 @@ const updateUser = async (
       bio,
       userId,
     ]);
+  } catch (error) {
+    throw generateError('Could not update user', 500);
   } finally {
-    connection.release();
+    if (connection) {
+      connection.release();
+    }
   }
 };
 
@@ -141,7 +159,7 @@ const getUserByUsername = async (username) => {
     );
 
     if (result.length === 0) {
-      throw generateError('There is no user with that email', 404);
+      throw generateError('There is no user with that username', 404);
     }
 
     return result[0];
@@ -149,6 +167,7 @@ const getUserByUsername = async (username) => {
     if (connection) connection.release();
   }
 };
+
 module.exports = {
   createUser,
   login,
