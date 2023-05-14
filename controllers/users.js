@@ -1,15 +1,15 @@
-const { validationResult } = require('express-validator');
-const { generateError, createPathIfNotExists } = require('../helpers');
-const path = require('path');
-const sharp = require('sharp');
-const crypto = require('crypto');
+const { validationResult } = require("express-validator");
+const { generateError, createPathIfNotExists } = require("../helpers");
+const path = require("path");
+const sharp = require("sharp");
+const crypto = require("crypto");
 
 const {
   userSchema,
   loginSchema,
   updateUserSchema,
   getUserSchema,
-} = require('../schemas/usersSchemas');
+} = require("../schemas/usersSchemas");
 
 const {
   createUser,
@@ -17,10 +17,10 @@ const {
   updateUser,
   getUserById,
   getUserByUsername,
-} = require('../db/users');
+} = require("../db/users");
 
 // Genera un nombre aleatorio de N caracteres para la imagen
-const randomName = (n) => crypto.randomBytes(n).toString('hex');
+const randomName = (n) => crypto.randomBytes(n).toString("hex");
 
 const validateNewUser = (req, res, next) => {
   const { error } = userSchema.validate(req.body);
@@ -30,7 +30,7 @@ const validateNewUser = (req, res, next) => {
   next();
 };
 
-const createNewUser = async (req, res) => {
+const createNewUser = async (req, res, next) => {
   try {
     const { username, name, lastname, address, gender, email, password, bio } =
       req.body;
@@ -46,7 +46,7 @@ const createNewUser = async (req, res) => {
     });
     res
       .status(200)
-      .json({ message: 'User registered successfully', userId: insertId });
+      .json({ message: "User registered successfully", userId: insertId });
   } catch (err) {
     next(err);
   }
@@ -54,12 +54,12 @@ const createNewUser = async (req, res) => {
 
 const newUserController = [validateNewUser, createNewUser];
 
-const loginController = async (req, res) => {
+const loginController = async (req, res, next) => {
   try {
-    const { error } = loginSchema.validate(req.body);
+    const { error, value } = loginSchema.validate(req.body);
 
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      return res.status(404).json({ error: error.details[0].message });
     }
 
     const { email, password } = value;
@@ -68,7 +68,6 @@ const loginController = async (req, res) => {
 
     res.status(200).json({ token });
   } catch (err) {
-    // throw generateError('Invalid email or password', 404);
     next(err);
   }
 };
@@ -88,17 +87,18 @@ const updateUserController = async (req, res, next) => {
     const user = await getUserById(userId);
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    const { name, lastname, address, gender, email, bio } = value;
+    const { username, name, lastname, address, gender, email, password, bio } =
+      value;
 
     let imageFileName;
 
     if (req.files?.profile_image) {
       //Creo el path del directorio uploads
-      const uploadsDir = path.join(__dirname, '../uploads');
-      const profileImageDir = path.join(__dirname, '../uploads/profileImage');
+      const uploadsDir = path.join(__dirname, "../uploads");
+      const profileImageDir = path.join(__dirname, "../uploads/profileImage");
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
       await createPathIfNotExists(profileImageDir);
@@ -106,11 +106,11 @@ const updateUserController = async (req, res, next) => {
       const image = sharp(req.files.profile_image.data);
       //verifico que el archivo contenga las extensiones jpg o png
       const fileName = req.files.profile_image.name;
-      if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
+      if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
         image.resize(256);
       } else {
         throw generateError(
-          'You must enter an image with jpg or png extension',
+          "You must enter an image with jpg or png extension",
           400
         );
       }
@@ -122,16 +122,18 @@ const updateUserController = async (req, res, next) => {
 
     await updateUser(
       userId,
+      username,
       name,
       lastname,
       address,
       gender,
       email,
+      password,
       imageFileName,
       bio
     );
 
-    res.status(200).json({ message: 'Profile updated successfully' });
+    res.status(200).json({ message: "Profile updated successfully" });
   } catch (err) {
     next(err);
   }
@@ -148,7 +150,7 @@ const getUserController = async (req, res, next) => {
     const user = await getUserById(user_id);
 
     if (!user) {
-      throw generateError('User not found', 404, { userId: user_id });
+      throw generateError("User not found", 404, { userId: user_id });
     }
 
     res.status(200).json(user);
