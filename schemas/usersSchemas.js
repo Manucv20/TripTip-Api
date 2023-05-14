@@ -7,6 +7,7 @@ const userSchema = Joi.object({
   address: Joi.string().required(),
   gender: Joi.string().valid('male', 'female', 'other').lowercase().required(),
   email: Joi.string().email().required(),
+  password: Joi.string().min(8).required(),
   profile_image: Joi.string().allow(null),
   bio: Joi.string().allow(null),
 });
@@ -16,22 +17,26 @@ const loginSchema = Joi.object({
     'string.email': 'Please enter a valid email address',
     'any.required': 'Email address is required',
   }),
-  password: Joi.string().min(8).required().messages({
+  password: Joi.string().min(8).max(50).required().messages({
     'string.min': 'Password must be at least {#limit} characters long',
+    'string.max': 'Password must not exceed {#limit} characters long',
     'any.required': 'Password is required',
   }),
 });
 
 const updateUserSchema = Joi.object({
-  profile_image: Joi.string().allow(null),
-  bio: Joi.string().allow(null),
-}).concat(userSchema);
+  username: Joi.string(),
+  name: Joi.string(),
+  lastname: Joi.string(),
+  address: Joi.string(),
+  gender: Joi.string().valid('male', 'female', 'other').lowercase(),
+  email: Joi.string().email(),
+  profile_image: Joi.string().allow(null).empty(false),
+  bio: Joi.string().allow(null).empty(false),
+});
 
 const getUserSchema = Joi.object({
-  id: Joi.string().required().messages({
-    'string.base': 'User ID must be a string',
-    'any.required': 'User ID is required',
-  }),
+  id: Joi.string().required(),
 });
 
 module.exports = {
