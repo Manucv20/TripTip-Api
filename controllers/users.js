@@ -30,7 +30,7 @@ const validateNewUser = (req, res, next) => {
   next();
 };
 
-const createNewUser = async (req, res, next) => {
+const createNewUser = async (req, res) => {
   try {
     const { username, name, lastname, address, gender, email, password, bio } =
       req.body;
@@ -57,9 +57,9 @@ const createNewUser = async (req, res, next) => {
 
 const newUserController = [validateNewUser, createNewUser];
 
-const loginController = async (req, res, next) => {
+const loginController = async (req, res) => {
   try {
-    const { error, value } = loginSchema.validate(req.body);
+    const { error } = loginSchema.validate(req.body);
 
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
@@ -143,7 +143,7 @@ const updateUserController = async (req, res, next) => {
 };
 const getUserController = async (req, res, next) => {
   try {
-    const { error, value } = getUserSchema.validate(req.params);
+    const { error } = getUserSchema.validate(req.params);
 
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
