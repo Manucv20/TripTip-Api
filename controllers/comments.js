@@ -19,15 +19,18 @@ const newCommentController = async (req, res, next) => {
       res.status(400).json({ error: error.details[0].message });
       return;
     }
-
-    const { user_id, recommendation_id, comment } = req.body;
-    const commentId = await createComments(user_id, recommendation_id, comment);
+    console.log(req.params.id);
+    const comment = value;
+    const commentId = await createComments(
+      req.userId,
+      req.params.id,
+      comment.comment
+    );
     return res
       .status(201)
       .json({ message: 'Comment posted successfully', commentId });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 };
 const getCommentsByRecommendationsController = async (req, res, next) => {

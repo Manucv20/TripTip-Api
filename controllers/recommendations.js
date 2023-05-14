@@ -2,7 +2,6 @@ const { generateError, createPathIfNotExists } = require('../helpers');
 const {
   newRecommendationSchema,
   idRecommendationSchema,
-  getRecommendationsByLocationAndCategorySchema,
 } = require('../schemas/recommendationsSchemas');
 const {
   createRecommendation,
@@ -11,7 +10,7 @@ const {
   deleteRecommendationById,
   recommendationOrderedByVotes,
   recommendationByUser,
-  checkRecommendationExists,
+  updateRecommendation,
 } = require('../db/recommendations');
 
 const path = require('path');
@@ -29,13 +28,15 @@ const newRecommendationController = async (req, res, next) => {
     }
     const { title, category, location, summary, details } = req.body;
 
-
     let imageFileName;
 
     if (req.files?.image) {
       //Creo el path del directorio uploads
       const uploadsDir = path.join(__dirname, '../uploads');
-      const recomImgDir = path.join(__dirname, '../uploads/recommendationImage');
+      const recomImgDir = path.join(
+        __dirname,
+        '../uploads/recommendationImage'
+      );
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
       await createPathIfNotExists(recomImgDir);
@@ -101,18 +102,17 @@ const deleteRecommendationController = async (req, res, next) => {
 
     res.status(200).json({ message: 'Recommendation deleted successfully' });
   } catch (err) {
-    console.log(err);
-    throw generateError('Recommendation didnt delete successfully', 500);
+    next(err);
   }
 };
 
 const getRecommendationController = async (req, res, next) => {
   try {
-    /*const { error, value } = idRecommendationSchema.validate(req.params);
+    const { error, value } = idRecommendationSchema.validate(req.params);
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
-    }*/
-    const { id } = req.params;
+    }
+    const { id } = value;
     const recommendations = await getRecommendationById(id);
 
     if (recommendations.length === 0) {
@@ -122,8 +122,7 @@ const getRecommendationController = async (req, res, next) => {
 
     res.status(200).json({ recommendation });
   } catch (err) {
-    console.log(err);
-    throw generateError('Recommendation not found', 404);
+    next(err);
   }
 };
 
@@ -141,8 +140,7 @@ const getRecommendationsByLocationAndCategoryController = async (
       data: recommendations,
     });
   } catch (err) {
-    console.log(err);
-    throw generateError('dont exist', 404);
+    next(err);
   }
 };
 
@@ -174,6 +172,66 @@ const getRecommendationByUserController = async (req, res, next) => {
   }
 };
 
+const updateRecommendationController = async (req, res, next) => {
+  try {
+    const { error, value } = newRecommendationSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ error: error.details[0].message });
+    }
+    const { title, category, location, summary, details } = value;
+    const { id } = req.params;
+    console.log(id);
+
+    let imageFileName;
+
+    if (req.files?.image) {
+      //Creo el path del directorio uploads
+      const uploadsDir = path.join(__dirname, '../uploads');
+      const recomImgDir = path.join(
+        __dirname,
+        '../uploads/recommendationImage'
+      );
+      //Creo el directorio si no existe
+      await createPathIfNotExists(uploadsDir);
+      await createPathIfNotExists(recomImgDir);
+      //Procesar la imagen
+      const image = sharp(req.files.image.data);
+      //verifico que el archivo contenga las extensiones jpg o png
+      const fileName = req.files.image.name;
+      if (fileName.endsWith('.jpg') || fileName.endsWith('.png')) {
+        image.resize(256);
+      } else {
+        throw generateError(
+          'You must enter an image with jpg or png extension',
+          400
+        );
+      }
+      //Guardo la imagen con un nombre aleatorio en el directorio uploads
+      imageFileName = `${randomName(16)}.jpg`;
+
+      await image.toFile(path.join(uploadsDir, imageFileName));
+    }
+
+    const query = await updateRecommendation(
+      req.userId,
+      title,
+      category,
+      location,
+      summary,
+      details,
+      imageFileName,
+      id
+    );
+
+    res.status(200).json({
+      message: 'Recommendation updated successfully',
+      recommendation_id: query.insertId,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   newRecommendationController,
   deleteRecommendationController,
@@ -181,4 +239,5 @@ module.exports = {
   getRecommendationsByLocationAndCategoryController,
   getRecommendationOrderedByVotesController,
   getRecommendationByUserController,
+  updateRecommendationController,
 };

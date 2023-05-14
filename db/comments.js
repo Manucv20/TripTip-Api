@@ -1,10 +1,6 @@
 const { getConnection } = require('./db');
 const { generateError } = require('../helpers');
-const createComments = async (
-  user_id,
-  recommendation_id,
-  comment
-) => {
+const createComments = async (user_id, recommendation_id, comment) => {
   let connection;
   try {
     connection = await getConnection();
@@ -27,7 +23,7 @@ const getCommentsByRecommendations = async (req, res) => {
       [recommendationId]
     );
     if (result.length === 0) {
-    throw generateError('No comments found for this recommendation', 404);
+      throw generateError('No comments found for this recommendation', 404);
     }
     return res.status(200).json({ comments: result });
   } finally {
@@ -36,7 +32,7 @@ const getCommentsByRecommendations = async (req, res) => {
 };
 
 const getCommentById = async (commentId) => {
-  let connection
+  let connection;
   try {
     const connection = await getConnection();
     const [result] = await connection.query(

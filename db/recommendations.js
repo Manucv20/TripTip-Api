@@ -129,11 +129,11 @@ const recommendationOrderedByVotes = async () => {
   try {
     connection = await getConnection();
     const [query] = await connection.query(`
-      SELECT r.*, COUNT(v.value) AS votes
-      FROM recommendations r
-      LEFT JOIN votes v ON v.recommendation_id = r.id
-      GROUP BY r.id
-      ORDER BY votes DESC
+      SELECT r.*, SUM(v.value) AS votes
+FROM recommendations r
+LEFT JOIN votes v ON v.recommendation_id = r.id
+GROUP BY r.id
+ORDER BY votes DESC;
     `);
     return query;
   } finally {
@@ -159,28 +159,36 @@ const recommendationByUser = async (id) => {
   }
 };
 
-const checkRecommendationExists = async (
+const updateRecommendation = async (
   userId,
   title,
   category,
   location,
   summary,
-  details
+  details,
+  image = '',
+  id
 ) => {
   let connection;
   try {
     connection = await getConnection();
-    const [existingRecommendation] = await connection.query(
-      `
-      SELECT id
-      FROM recommendations
-      WHERE user_id = ? AND title = ? AND category = ? AND location = ? AND summary = ? AND details = ?
-      LIMIT 1
-    `,
-      [userId, title, category, location, summary, details]
+    //Crear una recomendacion
+
+    const [newRecommendation] = await connection.query(
+      `UPDATE recommendations
+SET user_id = ?,
+    title = ?, 
+    category = ?, 
+    location = ?, 
+    summary = ?, 
+    details = ?, 
+    image = ?
+WHERE id = ?;`,
+      [userId, title, category, location, summary, details, image, id]
     );
 
-    return existingRecommendation.length > 0;
+    //Devolver la id
+    return newRecommendation.insertId;
   } finally {
     if (connection) connection.release();
   }
@@ -193,5 +201,5 @@ module.exports = {
   deleteRecommendationById,
   recommendationOrderedByVotes,
   recommendationByUser,
-  checkRecommendationExists,
+  updateRecommendation,
 };

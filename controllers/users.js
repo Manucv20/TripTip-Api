@@ -34,6 +34,7 @@ const createNewUser = async (req, res) => {
   try {
     const { username, name, lastname, address, gender, email, password, bio } =
       req.body;
+
     const insertId = await createUser({
       username,
       name,
@@ -42,16 +43,12 @@ const createNewUser = async (req, res) => {
       gender,
       email,
       password,
-      bio,
     });
     res
       .status(200)
       .json({ message: 'User registered successfully', userId: insertId });
   } catch (err) {
-    console.log(err);
-    res
-      .status(500)
-      .json({ error: 'An error occurred while creating the user' });
+    next(err);
   }
 };
 
@@ -64,24 +61,22 @@ const loginController = async (req, res) => {
     if (error) {
       return res.status(400).json({ error: error.details[0].message });
     }
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: errors.array()[0].msg });
-    }
 
-    const { email, password } = req.body;
+    const { email, password } = value;
 
     const token = await login(email, password);
 
     res.status(200).json({ token });
   } catch (err) {
-    throw generateError('Invalid email or password', 404);
+    // throw generateError('Invalid email or password', 404);
+    next(err);
   }
 };
 
 const updateUserController = async (req, res, next) => {
   try {
     const userId = req.params.id;
+    console.log(req.userId);
 
     // Validar datos de entrada
     const { error, value } = updateUserSchema.validate(req.body);

@@ -7,8 +7,10 @@ const {
   getRecommendationOrderedByVotesController,
   getRecommendationsByLocationAndCategoryController,
   getRecommendationByUserController,
+  updateRecommendationController,
 } = require('../controllers/recommendations');
 const { authUser } = require('../middlewares/auth');
+const { route } = require('./users');
 
 // Crear nueva recomendación
 router.post('/recommendations/', authUser, newRecommendationController);
@@ -33,5 +35,8 @@ router.get(
 
 // Obtener recomendaciones de un usuario
 router.get('/users/:id/recommendations', getRecommendationByUserController);
+
+// Actualizar recomendación hecha
+router.put('/recommendations/:id', authUser, updateRecommendationController);
 
 module.exports = router;
