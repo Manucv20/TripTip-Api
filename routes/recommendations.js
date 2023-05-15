@@ -10,7 +10,6 @@ const {
   updateRecommendationController,
 } = require('../controllers/recommendations');
 const { authUser } = require('../middlewares/auth');
-const { route } = require('./users');
 
 // Crear nueva recomendación
 router.post('/recommendations/', authUser, newRecommendationController);
