@@ -44,7 +44,7 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 
 ## Rutas de la API
 
-# Rutas de recomendaciones
+### Rutas de recomendaciones
 
 - Crear nueva recomendación: POST /recommendations/
 - Borrar recomendación: DELETE /recommendations/:id
@@ -54,17 +54,17 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 - Obtener recomendaciones de un usuario: GET /users/:id/recommendations
 - Actualizar recomendación hecha: PUT /recommendations/:id
 
-# Rutas de comentarios
+### Rutas de comentarios
 
 - Crear un nuevo comentario en una recomendación: POST /recommendations/comments/:id
 - Obtener comentarios por ID de recomendación: GET /recommendations/:id/comments
 - Borrar comentario por ID: DELETE /comments/:idUsuario
 
-# Rutas de votos
+### Rutas de votos
 
 - Crear un nuevo voto en una recomendación: POST /votes/:idDeRecomendacion
 
-# Rutas de usuarios
+### Rutas de usuarios
 
 - Registrar un nuevo usuario: POST /user/register
 - Iniciar sesión: POST /user/login
