@@ -1,4 +1,3 @@
-const { validationResult } = require("express-validator");
 const { generateError, createPathIfNotExists } = require("../helpers");
 const path = require("path");
 const sharp = require("sharp");
@@ -24,23 +23,19 @@ const randomName = (n) => crypto.randomBytes(n).toString("hex");
 
 const validateNewUser = (req, res, next) => {
   const { error } = userSchema.validate(req.body);
+
   if (error) {
-    return res.status(400).json({ error: error.details[0].message });
+    throw generateError(error.details[0].message, 400);
   }
   next();
 };
 
 const createNewUser = async (req, res, next) => {
   try {
-    const { username, name, lastname, address, gender, email, password, bio } =
-      req.body;
+    const { username, email, password } = req.body;
 
     const insertId = await createUser({
       username,
-      name,
-      lastname,
-      address,
-      gender,
       email,
       password,
     });
@@ -59,7 +54,7 @@ const loginController = async (req, res, next) => {
     const { error, value } = loginSchema.validate(req.body);
 
     if (error) {
-      return res.status(404).json({ error: error.details[0].message });
+      throw generateError(error.details[0].message, 404);
     }
 
     const { email, password } = value;
@@ -81,13 +76,13 @@ const updateUserController = async (req, res, next) => {
     const { error, value } = updateUserSchema.validate(req.body);
 
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      throw generateError(error.details[0].message, 400);
     }
 
     const user = await getUserById(userId);
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      throw generateError("User not found", 404);
     }
 
     const { username, name, lastname, address, gender, email, password, bio } =
@@ -154,7 +149,7 @@ const getUserController = async (req, res, next) => {
     const { error } = getUserSchema.validate(req.params);
 
     if (error) {
-      return res.status(400).json({ error: error.details[0].message });
+      throw generateError(error.details[0].message, 400);
     }
 
     const user_id = req.params.id;

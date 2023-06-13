@@ -1,6 +1,6 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const { getConnection } = require('./db');
+const { getConnection } = require("./db");
 
 async function main() {
   let connection;
@@ -8,21 +8,21 @@ async function main() {
   try {
     connection = await getConnection();
 
-    console.log('Borrando tablas existentes');
-    await connection.query('DROP TABLE IF EXISTS comments');
-    await connection.query('DROP TABLE IF EXISTS votes');
-    await connection.query('DROP TABLE IF EXISTS recommendations');
-    await connection.query('DROP TABLE IF EXISTS users');
+    console.log("Borrando tablas existentes");
+    await connection.query("DROP TABLE IF EXISTS comments");
+    await connection.query("DROP TABLE IF EXISTS votes");
+    await connection.query("DROP TABLE IF EXISTS recommendations");
+    await connection.query("DROP TABLE IF EXISTS users");
 
-    console.log('creando tablas');
+    console.log("creando tablas");
 
     await connection.query(`CREATE TABLE users (
 id INT PRIMARY KEY AUTO_INCREMENT,
 username VARCHAR(50) NOT NULL UNIQUE,
-name VARCHAR(50) NOT NULL,
+name VARCHAR(50),
 lastname varchar(50),
-address text not null,
-gender varchar(10) not null,
+address text,
+gender varchar(10),
 email VARCHAR(90) NOT NULL UNIQUE,
 password VARCHAR(90) NOT NULL,
 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

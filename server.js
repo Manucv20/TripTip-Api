@@ -1,31 +1,33 @@
-require('dotenv').config();
-const expressFileUpload = require('express-fileupload');
-const express = require('express');
-const morgan = require('morgan');
+require("dotenv").config();
+const expressFileUpload = require("express-fileupload");
+const express = require("express");
+const morgan = require("morgan");
+const cors = require("cors");
 const app = express();
-const userRoutes = require('./routes/users');
-const recommendationRoutes = require('./routes/recommendations');
-const votesRoutes = require('./routes/votes');
-const commentsRoutes = require('./routes/comments');
+const userRoutes = require("./routes/users");
+const recommendationRoutes = require("./routes/recommendations");
+const votesRoutes = require("./routes/votes");
+const commentsRoutes = require("./routes/comments");
 
+app.use(cors());
 app.use(expressFileUpload());
 app.use(express.json());
-app.use(morgan('dev'));
-app.use('/uploads', express.static('./uploads'));
-app.use('/uploads', express.static('./uploads/profileImage'));
-app.use('/uploads', express.static('./uploads/recommendationImage'));
+app.use(morgan("dev"));
+app.use("/uploads", express.static("./uploads"));
+app.use("/uploads", express.static("./uploads/profileImage"));
+app.use("/uploads", express.static("./uploads/recommendationImage"));
 
 //RUTAS
-app.use('/', userRoutes);
-app.use('/', recommendationRoutes);
-app.use('/', votesRoutes);
-app.use('/', commentsRoutes);
+app.use("/", userRoutes);
+app.use("/", recommendationRoutes);
+app.use("/", votesRoutes);
+app.use("/", commentsRoutes);
 
 //Middleware para el error 404
 app.use((req, res) => {
   res.status(404).send({
-    status: 'Error',
-    message: 'Página no encontrada',
+    status: "Error",
+    message: "Página no encontrada",
   });
 });
 
@@ -34,7 +36,7 @@ app.use((error, req, res, next) => {
   console.error(error);
 
   res.status(error.httpStatus || 500).send({
-    status: 'Error',
+    status: "Error",
     message: error.message,
   });
 });

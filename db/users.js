@@ -3,16 +3,7 @@ const { generateError } = require("../helpers");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const createUser = async ({
-  username,
-  name,
-  lastname,
-  address,
-  gender,
-  email,
-  password,
-  bio,
-}) => {
+const createUser = async ({ username, email, password }) => {
   let connection;
   try {
     connection = await getConnection();
@@ -49,16 +40,11 @@ const createUser = async ({
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     const insertUserQuery =
-      "INSERT INTO users (username,name,lastname, address, gender, email, password, bio) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
     const insertResult = await connection.query(insertUserQuery, [
       username,
-      name,
-      lastname,
-      address,
-      gender,
       email,
       hashedPassword,
-      bio,
     ]);
 
     return insertResult.insertId;
@@ -90,18 +76,28 @@ const login = async (email, password) => {
       throw generateError("Invalid email or password", 404);
     }
 
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        userUsername: user.username,
+        userEmail: user.email,
+        firstName: user.name,
+        lastName: user.lastname,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
 
-    const userData = {
+    /* const userData = {
       id: user.id,
       username: user.username,
       name: user.name,
       email: user.email,
-    };
+    }; */
 
-    return { token, userData };
+    return token;
   } catch (err) {
     throw generateError("Invalid email or password", 404);
   } finally {

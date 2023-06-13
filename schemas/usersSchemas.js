@@ -2,10 +2,10 @@ const Joi = require("joi");
 
 const userSchema = Joi.object({
   username: Joi.string().required(),
-  name: Joi.string().required(),
-  lastname: Joi.string().required(),
-  address: Joi.string().required(),
-  gender: Joi.string().valid("male", "female", "other").lowercase().required(),
+  name: Joi.string(),
+  lastname: Joi.string(),
+  address: Joi.string(),
+  gender: Joi.string().valid("male", "female", "other").lowercase(),
   email: Joi.string().email().required(),
   password: Joi.string().min(8).required(),
   profile_image: Joi.string().allow(null),
