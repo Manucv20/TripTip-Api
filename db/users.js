@@ -18,20 +18,20 @@ const createUser = async ({ username, email, password }) => {
     );
     if (emailExist.length > 0 && usernameExist.length > 0) {
       throw generateError(
-        "A user with this email and username already exists in the database",
+        `"username" & "email" already exists in our database, please enter another username & email.`,
         409
       );
     }
     if (emailExist.length > 0) {
       throw generateError(
-        "A user with this email already exists in the database",
+        `"email" already exists in our database, please enter another email.`,
         409
       );
     }
 
     if (usernameExist.length > 0) {
       throw generateError(
-        "A user with this username already exists in the database",
+        `"username" already exists in our database, please enter another username.`,
         409
       );
     }
@@ -99,7 +99,10 @@ const login = async (email, password) => {
 
     return token;
   } catch (err) {
-    throw generateError("Invalid email or password", 404);
+    throw generateError(
+      "Incorrect username or password, please review the data.",
+      404
+    );
   } finally {
     if (connection) {
       connection.release();
