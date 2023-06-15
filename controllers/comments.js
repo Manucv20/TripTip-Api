@@ -27,7 +27,7 @@ const newCommentController = async (req, res, next) => {
       comment.comment
     );
     return res
-      .status(201)
+      .status(200)
       .json({ message: "Comment posted successfully", commentId });
   } catch (err) {
     next(err);

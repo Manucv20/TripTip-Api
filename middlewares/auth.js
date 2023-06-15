@@ -15,7 +15,6 @@ const authUser = (req, res, next) => {
     }
 
     req.userId = token.userId;
-    req.userUsername = token.userUsername;
     req.userEmail = token.userEmail;
 
     next();

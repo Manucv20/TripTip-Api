@@ -41,12 +41,11 @@ const createUser = async ({ username, email, password }) => {
 
     const insertUserQuery =
       "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-    const insertResult = await connection.query(insertUserQuery, [
+    const [insertResult] = await connection.query(insertUserQuery, [
       username,
       email,
       hashedPassword,
     ]);
-
     return insertResult.insertId;
   } finally {
     if (connection) {
@@ -70,6 +69,14 @@ const login = async (email, password) => {
     }
 
     const user = users[0];
+
+    if (!user.isActivated) {
+      throw generateError(
+        "Account not activated. Please activate your account first.",
+        403
+      );
+    }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -89,14 +96,6 @@ const login = async (email, password) => {
         expiresIn: "30d",
       }
     );
-
-    /* const userData = {
-      id: user.id,
-      username: user.username,
-      name: user.name,
-      email: user.email,
-    }; */
-
     return token;
   } catch (err) {
     throw generateError(
@@ -158,7 +157,7 @@ const getUserById = async (userId) => {
   return rows[0];
 };
 
-const getUserByUsername = async (username) => {
+const getUserByEmail = async (email) => {
   let connection;
 
   try {
@@ -166,13 +165,13 @@ const getUserByUsername = async (username) => {
 
     const [result] = await connection.query(
       `
-      SELECT *  FROM users WHERE username=?
+      SELECT *  FROM users WHERE email = ?
     `,
-      [username]
+      [email]
     );
 
     if (result.length === 0) {
-      throw generateError("There is no user with that username", 404);
+      throw generateError("There is no user with that email", 404);
     }
 
     return result[0];
@@ -186,5 +185,5 @@ module.exports = {
   login,
   updateUser,
   getUserById,
-  getUserByUsername,
+  getUserByEmail,
 };

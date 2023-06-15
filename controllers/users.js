@@ -15,8 +15,16 @@ const {
   login,
   updateUser,
   getUserById,
-  getUserByUsername,
+  getUserByEmail,
 } = require("../db/users");
+
+const { sendActivationEmail } = require("./email");
+const { createEmailVerification } = require("../db/email");
+const { v4: uuidv4 } = require("uuid");
+
+const generateActivationToken = () => {
+  return uuidv4();
+};
 
 // Genera un nombre aleatorio de N caracteres para la imagen
 const randomName = (n) => crypto.randomBytes(n).toString("hex");
@@ -34,14 +42,19 @@ const createNewUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
-    const insertId = await createUser({
+    const token = generateActivationToken();
+
+    const userId = await createUser({
       username,
       email,
       password,
     });
-    res
-      .status(200)
-      .json({ message: "User registered successfully", userId: insertId });
+
+    await createEmailVerification({ userId, token });
+
+    await sendActivationEmail(username, email, token);
+
+    res.status(200).json({ message: "User registered successfully", userId });
   } catch (err) {
     next(err);
   }
@@ -58,6 +71,19 @@ const loginController = async (req, res, next) => {
     }
 
     const { email, password } = value;
+
+    const user = await getUserByEmail(email);
+
+    if (!user) {
+      throw generateError("Invalid email or password", 401);
+    }
+
+    if (!user.isActivated) {
+      throw generateError(
+        "Account not activated. Please activate your account first.",
+        403
+      );
+    }
 
     const token = await login(email, password);
 
