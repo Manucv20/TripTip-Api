@@ -1,4 +1,4 @@
-const { generateError, createPathIfNotExists } = require("../helpers");
+const { generateError } = require("../helpers");
 
 const Mailjet = require("node-mailjet");
 const { getUserByToken, activateUser } = require("../db/email");
@@ -9,7 +9,7 @@ const mailjet = new Mailjet({
   apiSecret: process.env.MJ_APIKEY_PRIVATE || "",
 });
 
-const sendActivationEmail = async (username, email, token) => {
+const sendActivationEmail = async (username, email, token, frontendURL) => {
   try {
     const { response } = await mailjet
       .post("send", { version: "v3.1" })
@@ -29,14 +29,14 @@ const sendActivationEmail = async (username, email, token) => {
             Subject: "User Activation",
             TextPart:
               "Dear passenger 1, welcome to Mailjet! May the delivery force be with you!",
-            HTMLPart: `<h3>Hi ${username},</h3> <p>You are the newest member of TripTip, a community for sharing unique and unusual experiences while traveling the world. We are happy to have you and we hope to see your travel recommendations very soon.</p><p>Please verify your email address through this link:</p><a href="http://192.168.43.174:5173/activate/${token}">https://triptip.com/activate/${token}</a><br /><p>Your access data:</p><p>Email address: ${email} <br /> Username: ${username}</p><p>Your team TripTip</p>`,
+            HTMLPart: `<h3>Hi ${username},</h3> <p>You are the newest member of TripTip, a community for sharing unique and unusual experiences while traveling the world. We are happy to have you and we hope to see your travel recommendations very soon.</p><p>Please verify your email address through this link:</p><a href="${frontendURL}/activate/${token}">https://triptip.com/activate/${token}</a><br /><p>Your access data:</p><p>Email address: ${email} <br /> Username: ${username}</p><p>Your team TripTip</p>`,
           },
         ],
       });
 
     return response.status;
   } catch (error) {
-    throw e;
+    throw generateError(error.message, 400);
   }
 };
 
@@ -44,7 +44,7 @@ const activateAccountController = async (req, res, next) => {
   try {
     const { token } = req.params;
 
-    // Verificar que el token sea válido y obtener el usuario asociado
+    // Verifica que el token sea válido y obtener el usuario asociado
     const user = await getUserByToken(token);
 
     if (!user) {
@@ -59,7 +59,6 @@ const activateAccountController = async (req, res, next) => {
     await activateUser(user.id);
 
     res.status(200).json({ message: "Account activated successfully" });
-    sesión;
   } catch (err) {
     next(err);
   }

@@ -41,6 +41,7 @@ const validateNewUser = (req, res, next) => {
 const createNewUser = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
+    const frontendURL = req.headers["frontend-url"];
 
     const token = generateActivationToken();
 
@@ -52,7 +53,7 @@ const createNewUser = async (req, res, next) => {
 
     await createEmailVerification({ userId, token });
 
-    await sendActivationEmail(username, email, token);
+    await sendActivationEmail(username, email, token, frontendURL);
 
     res.status(200).json({ message: "User registered successfully", userId });
   } catch (err) {
@@ -96,7 +97,6 @@ const loginController = async (req, res, next) => {
 const updateUserController = async (req, res, next) => {
   try {
     const userId = req.params.id;
-    console.log(req.userId);
 
     // Validar datos de entrada
     const { error, value } = updateUserSchema.validate(req.body);
