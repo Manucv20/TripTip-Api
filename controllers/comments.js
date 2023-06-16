@@ -1,16 +1,16 @@
 const { getConnection } = require("../db/db.js");
+
 const {
   newCommentSchema,
   idCommentsSchema,
 } = require("../schemas/commentsSchemas");
+
 const {
   createComments,
   getCommentsByRecommendations,
   getCommentById,
 } = require("../db/comments.js");
-const path = require("path");
-const { createPathIfNotExists } = require("../helpers");
-const sharp = require("sharp");
+const { generateError } = require("../helpers.js");
 
 const newCommentController = async (req, res, next) => {
   try {
@@ -19,13 +19,11 @@ const newCommentController = async (req, res, next) => {
       res.status(400).json({ error: error.details[0].message });
       return;
     }
-    console.log(req.params.id);
-    const comment = value;
-    const commentId = await createComments(
-      req.userId,
-      req.params.id,
-      comment.comment
-    );
+
+    const { comment } = value;
+
+    const commentId = await createComments(req.userId, req.params.id, comment);
+
     return res
       .status(200)
       .json({ message: "Comment posted successfully", commentId });
@@ -33,6 +31,7 @@ const newCommentController = async (req, res, next) => {
     next(err);
   }
 };
+
 const getCommentsByRecommendationsController = async (req, res, next) => {
   try {
     const { error } = idCommentsSchema.validate(req.params);
@@ -44,8 +43,7 @@ const getCommentsByRecommendationsController = async (req, res, next) => {
 
     res.status(200).json({ comments: comments });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    next(err);
   }
 };
 
@@ -58,11 +56,11 @@ const deleteCommentsByUserController = async (req, res, next) => {
     }
     const { id } = req.params;
     const comment = await getCommentById(id);
-    console.log(req.userId);
-    console.log(comment.user_id);
+
     if (req.userId !== comment.user_id) {
-      throw new Error(
-        "You are trying to delete a comment that does not belong to you"
+      throw generateError(
+        "You are not authorized to delete this comment.",
+        400
       );
     }
     connection = await getConnection();

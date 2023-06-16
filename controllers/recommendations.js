@@ -33,13 +33,8 @@ const newRecommendationController = async (req, res, next) => {
     if (req.files?.image) {
       //Creo el path del directorio uploads
       const uploadsDir = path.join(__dirname, "../uploads");
-      const recomImgDir = path.join(
-        __dirname,
-        "../uploads/recommendationImage"
-      );
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
-      await createPathIfNotExists(recomImgDir);
       //Procesar la imagen
       const image = sharp(req.files.image.data);
       //verifico que el archivo contenga las extensiones jpg o png
@@ -70,7 +65,7 @@ const newRecommendationController = async (req, res, next) => {
 
     res.status(200).json({
       message: "Recommendation created successfully",
-      recommendation_id: query.insertId,
+      recommendation_id: query,
     });
   } catch (err) {
     next(err);
@@ -84,12 +79,8 @@ const deleteRecommendationController = async (req, res, next) => {
       throw new Error(error.details[0].message);
     }
     const { id } = req.params;
-    console.log(id);
-    console.log(req.userId);
 
     const [deleteQuery] = await getRecommendationById(id);
-
-    console.log(deleteQuery.result.user_id);
 
     if (req.userId !== deleteQuery.result.user_id) {
       throw generateError(
@@ -116,8 +107,9 @@ const getRecommendationController = async (req, res, next) => {
     const recommendations = await getRecommendationById(id);
 
     if (recommendations.length === 0) {
-      return res.status(404).json({ error: "Recommendation not found" });
+      throw generateError("Recommendation not found", 404);
     }
+
     const recommendation = recommendations[0];
 
     res.status(200).json({ recommendation });
@@ -135,6 +127,14 @@ const getRecommendationsByLocationAndCategoryController = async (
     const localization = req.query.location || "";
     const category = req.query.category || "";
     const recommendations = await getRecommendation(localization, category);
+
+    if (recommendations.length === 0) {
+      throw generateError(
+        "No recommendations found for the given criteria.",
+        404
+      );
+    }
+
     res.send({
       status: "OK",
       data: recommendations,
@@ -148,9 +148,11 @@ const getRecommendationOrderedByVotesController = async (req, res, next) => {
   try {
     const query = await recommendationOrderedByVotes();
 
+    console.log(query);
+
     res.status(200).json({ recommendations: query });
   } catch (err) {
-    throw generateError("Server error", 500);
+    next(err);
   }
 };
 
@@ -194,13 +196,8 @@ const updateRecommendationController = async (req, res, next) => {
     if (req.files?.image) {
       //Creo el path del directorio uploads
       const uploadsDir = path.join(__dirname, "../uploads");
-      const recomImgDir = path.join(
-        __dirname,
-        "../uploads/recommendationImage"
-      );
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
-      await createPathIfNotExists(recomImgDir);
       //Procesar la imagen
       const image = sharp(req.files.image.data);
       //verifico que el archivo contenga las extensiones jpg o png

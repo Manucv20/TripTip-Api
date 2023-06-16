@@ -1,17 +1,23 @@
-const { createVotes } = require('../db/votes');
-const { getRecommendationById } = require('../db/recommendations');
+const { createVotes } = require("../db/votes");
+const { getRecommendationById } = require("../db/recommendations");
 
 const NewVoteController = async (req, res, next) => {
   try {
-    console.log(req.userId);
     const { id } = req.params;
     const recommendation = await getRecommendationById(id);
 
     //Añadir una votación en una recomendación
-    await createVotes(req.userId, recommendation[0].result.id);
+    const data = await createVotes(req.userId, recommendation[0].result.id);
+
+    if (data) {
+      message = "Great choice! You've liked the recommendation.";
+    } else {
+      message = "Changed your mind? You've unliked the recommendation.";
+    }
+
     res.send({
-      status: 'OK',
-      message: 'Vote created successfully',
+      status: "OK",
+      message,
     });
   } catch (e) {
     next(e);

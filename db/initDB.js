@@ -49,7 +49,7 @@ async function main() {
       id INT PRIMARY KEY AUTO_INCREMENT,
       user_id INT NOT NULL,
       recommendation_id INT NOT NULL,
-      value INT NOT NULL,
+      value BOOLEAN NOT NULL DEFAULT true,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (recommendation_id) REFERENCES recommendations(id) ON DELETE CASCADE

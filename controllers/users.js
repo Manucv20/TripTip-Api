@@ -105,10 +105,11 @@ const updateUserController = async (req, res, next) => {
       throw generateError(error.details[0].message, 400);
     }
 
-    const user = await getUserById(userId);
-
-    if (!user) {
-      throw generateError("User not found", 404);
+    if (Number(req.userId) !== Number(userId)) {
+      throw generateError(
+        "Unauthorized. You are not allowed to modify another user's data.",
+        403
+      );
     }
 
     const { username, name, lastname, address, gender, email, password, bio } =
@@ -119,10 +120,8 @@ const updateUserController = async (req, res, next) => {
     if (req.files?.profile_image) {
       //Creo el path del directorio uploads
       const uploadsDir = path.join(__dirname, "../uploads");
-      const profileImageDir = path.join(__dirname, "../uploads/profileImage");
       //Creo el directorio si no existe
       await createPathIfNotExists(uploadsDir);
-      await createPathIfNotExists(profileImageDir);
       //Procesar la imagen
       const image = sharp(req.files.profile_image.data);
       //verifico que el archivo contenga las extensiones jpg o png
@@ -179,11 +178,15 @@ const getUserController = async (req, res, next) => {
     }
 
     const user_id = req.params.id;
-    const user = await getUserById(user_id);
 
-    if (!user) {
-      throw generateError("User not found", 404, { userId: user_id });
+    if (Number(req.userId) !== Number(user_id)) {
+      throw generateError(
+        "Unauthorized. You are not allowed to modify another user's data.",
+        403
+      );
     }
+
+    const user = await getUserById(user_id);
 
     res.status(200).json(user);
   } catch (err) {

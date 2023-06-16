@@ -30,6 +30,7 @@ const createRecommendation = async (
     if (connection) connection.release();
   }
 };
+
 //muestra los datos de un registro de la tabla recomendations
 const getRecommendationById = async (id) => {
   if (!id) {
@@ -74,6 +75,7 @@ const getRecommendationById = async (id) => {
     if (connection) connection.release();
   }
 };
+
 //Muestra el resultado de la busqueda de recomendaciones por lugar o categoria
 const getRecommendation = async (location, category) => {
   let connection;
@@ -104,6 +106,7 @@ const getRecommendation = async (location, category) => {
     if (connection) connection.release();
   }
 };
+
 //Elimina tu propia recomendación
 const deleteRecommendationById = async (id) => {
   let connection;
@@ -123,23 +126,26 @@ const deleteRecommendationById = async (id) => {
     if (connection) connection.release();
   }
 };
+
 const recommendationOrderedByVotes = async () => {
   let connection;
 
   try {
     connection = await getConnection();
     const [query] = await connection.query(`
-      SELECT r.*, SUM(v.value) AS votes
-FROM recommendations r
-LEFT JOIN votes v ON v.recommendation_id = r.id
-GROUP BY r.id
-ORDER BY votes DESC;
+      SELECT r.*, COALESCE(SUM(v.value), 0) AS votes
+      FROM recommendations r
+      LEFT JOIN votes v ON v.recommendation_id = r.id
+      GROUP BY r.id
+      ORDER BY votes DESC;
     `);
+
     return query;
   } finally {
     if (connection) connection.release();
   }
 };
+
 const recommendationByUser = async (id) => {
   let connection;
 
@@ -156,6 +162,7 @@ const recommendationByUser = async (id) => {
     if (recommendation.length === 0) {
       throw generateError("This user doesn't have recommendations", 404);
     }
+
     return recommendation;
   } finally {
     if (connection) connection.release();
@@ -179,14 +186,14 @@ const updateRecommendation = async (
 
     const [newRecommendation] = await connection.query(
       `UPDATE recommendations
-SET user_id = ?,
-    title = ?, 
-    category = ?, 
-    location = ?, 
-    summary = ?, 
-    details = ?, 
-    image = ?
-WHERE id = ?;`,
+      SET user_id = ?,
+      title = ?, 
+      category = ?, 
+      location = ?, 
+      summary = ?, 
+      details = ?, 
+      image = ?
+      WHERE id = ?;`,
       [userId, title, category, location, summary, details, image, id]
     );
 

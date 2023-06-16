@@ -46,6 +46,7 @@ const createUser = async ({ username, email, password }) => {
       email,
       hashedPassword,
     ]);
+
     return insertResult.insertId;
   } finally {
     if (connection) {
