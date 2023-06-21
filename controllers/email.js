@@ -27,9 +27,8 @@ const sendActivationEmail = async (username, email, token, frontendURL) => {
               },
             ],
             Subject: "User Activation",
-            TextPart:
-              "Dear passenger 1, welcome to Mailjet! May the delivery force be with you!",
-            HTMLPart: `<h3>Hi ${username},</h3> <p>You are the newest member of TripTip, a community for sharing unique and unusual experiences while traveling the world. We are happy to have you and we hope to see your travel recommendations very soon.</p><p>Please verify your email address through this link:</p><a href="${frontendURL}/activate/${token}">https://triptip.com/activate/${token}</a><br /><p>Your access data:</p><p>Email address: ${email} <br /> Username: ${username}</p><p>Your team TripTip</p>`,
+            TextPart: `¡Estimado ${username}, bienvenido a Mailjet! ¡Que la fuerza de entrega esté contigo!`,
+            HTMLPart: `<h3>Hola ${username},</h3> <p>Eres el miembro más reciente de TripTip, una comunidad para compartir experiencias únicas e inusuales mientras viajas por el mundo. Estamos felices de tenerte y esperamos ver tus recomendaciones de viaje muy pronto.</p><p>Por favor, verifica tu dirección de correo electrónico a través de este enlace:</p><a href="${frontendURL}/activate/${token}">https://triptip.com/activate/${token}</a><br /><p>Tus datos de acceso:</p><p>Email: ${email} <br /> Username: ${username}</p><p>Tu equipo TripTip</p>`,
           },
         ],
       });
@@ -48,17 +47,17 @@ const activateAccountController = async (req, res, next) => {
     const user = await getUserByToken(token);
 
     if (!user) {
-      throw generateError("Invalid activation token", 400);
+      throw generateError("Token de activación inválido.", 400);
     }
 
     if (user.isActivated) {
-      throw generateError("Token has already been used", 400);
+      throw generateError("El token ya ha sido utilizado.", 400);
     }
 
     // Actualizar el campo isActivated del usuario a true
     await activateUser(user.id);
 
-    res.status(200).json({ message: "Account activated successfully" });
+    res.status(200).json({ message: "Cuenta activada exitosamente." });
   } catch (err) {
     next(err);
   }

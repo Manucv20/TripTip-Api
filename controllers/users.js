@@ -55,7 +55,9 @@ const createNewUser = async (req, res, next) => {
 
     await sendActivationEmail(username, email, token, frontendURL);
 
-    res.status(200).json({ message: "User registered successfully", userId });
+    res
+      .status(200)
+      .json({ message: "Usuario registrado exitosamente.", userId });
   } catch (err) {
     next(err);
   }
@@ -76,12 +78,12 @@ const loginController = async (req, res, next) => {
     const user = await getUserByEmail(email);
 
     if (!user) {
-      throw generateError("Invalid email or password", 401);
+      throw generateError("Correo electrónico o contraseña inválidos.", 401);
     }
 
     if (!user.isActivated) {
       throw generateError(
-        "Account not activated. Please activate your account first.",
+        "Cuenta no activada. Por favor, active su cuenta primero.",
         403
       );
     }
@@ -107,7 +109,7 @@ const updateUserController = async (req, res, next) => {
 
     if (Number(req.userId) !== Number(userId)) {
       throw generateError(
-        "Unauthorized. You are not allowed to modify another user's data.",
+        "No autorizado!! No tienes permiso para modificar los datos de otro usuario.",
         403
       );
     }
@@ -130,7 +132,7 @@ const updateUserController = async (req, res, next) => {
         image.resize(256);
       } else {
         throw generateError(
-          "You must enter an image with jpg or png extension",
+          "Por favor, asegúrate de subir una imagen en formato jpg o png",
           400
         );
       }
@@ -154,12 +156,12 @@ const updateUserController = async (req, res, next) => {
         bio
       );
 
-      res.status(200).json({ message: "Profile updated successfully" });
+      res.status(200).json({ message: "Perfil actualizado exitosamente." });
     } catch (err) {
       if (err.code === "ER_DUP_ENTRY") {
         return res.status(400).json({
           error:
-            "Username or email already exists. Please choose a different username.",
+            "El nombre de usuario o correo electrónico ya existe. Por favor, elige un nombre de usuario  o correo electrónico diferente.",
         });
       }
 
@@ -181,7 +183,7 @@ const getUserController = async (req, res, next) => {
 
     if (Number(req.userId) !== Number(user_id)) {
       throw generateError(
-        "Unauthorized. You are not allowed to modify another user's data.",
+        "No autorizado!! No tienes permiso para modificar los datos de otro usuario.",
         403
       );
     }

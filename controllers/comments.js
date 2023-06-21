@@ -26,7 +26,7 @@ const newCommentController = async (req, res, next) => {
 
     return res
       .status(200)
-      .json({ message: "Comment posted successfully", commentId });
+      .json({ message: "Comentario publicado exitosamente.", commentId });
   } catch (err) {
     next(err);
   }
@@ -36,7 +36,7 @@ const getCommentsByRecommendationsController = async (req, res, next) => {
   try {
     const { error } = idCommentsSchema.validate(req.params);
     if (error) {
-      return res.status(400).json({ error: "Invalid id" });
+      return res.status(400).json({ error: "Id Invalido" });
     }
 
     const comments = await getCommentsByRecommendations(req, res);
@@ -52,14 +52,14 @@ const deleteCommentsByUserController = async (req, res, next) => {
   try {
     const { error } = idCommentsSchema.validate(req.params);
     if (error) {
-      return res.status(400).json({ error: "Invalid id" });
+      return res.status(400).json({ error: "Id Invalido" });
     }
     const { id } = req.params;
     const comment = await getCommentById(id);
 
     if (req.userId !== comment.user_id) {
       throw generateError(
-        "You are not authorized to delete this comment.",
+        "No estás autorizado para eliminar este comentario",
         400
       );
     }
@@ -67,7 +67,7 @@ const deleteCommentsByUserController = async (req, res, next) => {
     const deleteCommentQuery = "DELETE FROM comments WHERE id = ?";
     await connection.query(deleteCommentQuery, [id]);
 
-    res.status(200).json({ message: "Comment deleted successfully" });
+    res.status(200).json({ message: "Comentario eliminado exitosamente." });
   } catch (err) {
     next(err);
   } finally {

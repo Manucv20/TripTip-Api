@@ -43,7 +43,7 @@ const newRecommendationController = async (req, res, next) => {
         image.resize(256);
       } else {
         throw generateError(
-          "You must enter an image with jpg or png extension",
+          "Por favor, asegúrate de subir una imagen en formato jpg o png.",
           400
         );
       }
@@ -64,7 +64,7 @@ const newRecommendationController = async (req, res, next) => {
     );
 
     res.status(200).json({
-      message: "Recommendation created successfully",
+      message: "Recomendación creada exitosamente.",
       recommendation_id: query,
     });
   } catch (err) {
@@ -84,14 +84,14 @@ const deleteRecommendationController = async (req, res, next) => {
 
     if (req.userId !== deleteQuery.result.user_id) {
       throw generateError(
-        "You cant delete a recommendation that doesnt belong to you",
+        "No puedes eliminar una recomendación que no te pertenece.",
         401
       );
     }
 
     await deleteRecommendationById(id);
 
-    res.status(200).json({ message: "Recommendation deleted successfully" });
+    res.status(200).json({ message: "Recomendación eliminada exitosamente." });
   } catch (err) {
     next(err);
   }
@@ -107,7 +107,7 @@ const getRecommendationController = async (req, res, next) => {
     const recommendations = await getRecommendationById(id);
 
     if (recommendations.length === 0) {
-      throw generateError("Recommendation not found", 404);
+      throw generateError("Recomendación no encontrada.", 404);
     }
 
     const recommendation = recommendations[0];
@@ -130,7 +130,7 @@ const getRecommendationsByLocationAndCategoryController = async (
 
     if (recommendations.length === 0) {
       throw generateError(
-        "No recommendations found for the given criteria.",
+        "No se encontraron recomendaciones para los criterios dados.",
         404
       );
     }
@@ -186,7 +186,7 @@ const updateRecommendationController = async (req, res, next) => {
 
     if (req.userId !== updateQuery.result.user_id) {
       throw generateError(
-        "You can't a recommendation that doesnt belong to you",
+        "No puedes eliminar una recomendación que no te pertenece.",
         401
       );
     }
@@ -206,7 +206,7 @@ const updateRecommendationController = async (req, res, next) => {
         image.resize(256);
       } else {
         throw generateError(
-          "You must enter an image with jpg or png extension",
+          "Por favor, asegúrate de subir una imagen en formato jpg o png.",
           400
         );
       }
@@ -228,7 +228,7 @@ const updateRecommendationController = async (req, res, next) => {
     );
 
     res.status(200).json({
-      message: "Recommendation updated successfully",
+      message: "Recomendación actualizada exitosamente.",
       recommendation_id: query.insertId,
     });
   } catch (err) {

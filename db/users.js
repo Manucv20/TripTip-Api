@@ -18,20 +18,20 @@ const createUser = async ({ username, email, password }) => {
     );
     if (emailExist.length > 0 && usernameExist.length > 0) {
       throw generateError(
-        `"username" & "email" already exists in our database, please enter another username & email.`,
+        `"Nombre de usuario" y "correo electrónico" ya existen en nuestra base de datos. Por favor, ingresa otro nombre de usuario y correo electrónico.`,
         409
       );
     }
     if (emailExist.length > 0) {
       throw generateError(
-        `"email" already exists in our database, please enter another email.`,
+        `"Correo electrónico" ya existe en nuestra base de datos. Por favor, ingresa otro correo electrónico.`,
         409
       );
     }
 
     if (usernameExist.length > 0) {
       throw generateError(
-        `"username" already exists in our database, please enter another username.`,
+        `"Nombre de usuario" ya existe en nuestra base de datos. Por favor, ingresa otro nombre de usuario.`,
         409
       );
     }
@@ -66,14 +66,14 @@ const login = async (email, password) => {
     );
 
     if (users.length === 0) {
-      throw generateError("Invalid email or password", 404);
+      throw generateError("Correo electrónico o contraseña inválidos.", 404);
     }
 
     const user = users[0];
 
     if (!user.isActivated) {
       throw generateError(
-        "Account not activated. Please activate your account first.",
+        "Cuenta no activada. Por favor, activa tu cuenta primero.",
         403
       );
     }
@@ -81,7 +81,7 @@ const login = async (email, password) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw generateError("Invalid email or password", 404);
+      throw generateError("Correo electrónico o contraseña inválidos.", 404);
     }
 
     const token = jwt.sign(
@@ -100,7 +100,7 @@ const login = async (email, password) => {
     return token;
   } catch (err) {
     throw generateError(
-      "Incorrect username or password, please review the data.",
+      "Nombre de usuario o contraseña incorrectos, por favor revisa los datos.",
       404
     );
   } finally {
@@ -172,7 +172,10 @@ const getUserByEmail = async (email) => {
     );
 
     if (result.length === 0) {
-      throw generateError("There is no user with that email", 404);
+      throw generateError(
+        "No hay ningún usuario con ese correo electrónico.",
+        404
+      );
     }
 
     return result[0];

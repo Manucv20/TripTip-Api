@@ -6,7 +6,7 @@ const authUser = (req, res, next) => {
     const { authorization } = req.headers;
     if (!authorization) {
       throw generateError(
-        "Unauthorized. You need to be a registered user to perform this action.",
+        "No autorizado. Debes ser un usuario registrado para realizar esta acción.",
         401
       );
     }
@@ -15,7 +15,7 @@ const authUser = (req, res, next) => {
       token = jwt.verify(authorization, process.env.JWT_SECRET);
     } catch {
       throw generateError(
-        "Token expired. Please log in again to continue.",
+        "Token expirado. Por favor, inicia sesión nuevamente para continuar..",
         401
       );
     }

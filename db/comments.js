@@ -13,7 +13,7 @@ const createComments = async (user_id, recommendation_id, comment) => {
     );
 
     if (checkResult.length === 0) {
-      throw generateError("This recommendation does not exist.", 404);
+      throw generateError("Esta recomendación no existe.", 404);
     }
 
     const [result] = await connection.query(
@@ -37,7 +37,10 @@ const getCommentsByRecommendations = async (req, res) => {
       [recommendationId]
     );
     if (result.length === 0) {
-      throw generateError("No comments found for this recommendation", 404);
+      throw generateError(
+        "No se encontraron comentarios para esta recomendación.",
+        404
+      );
     }
     return res.status(200).json({ comments: result });
   } finally {
@@ -54,7 +57,7 @@ const getCommentById = async (commentId) => {
       [commentId]
     );
     if (!result.length) {
-      throw generateError("Comment not found", 404);
+      throw generateError("Comentario no encontrado", 404);
     }
     return result[0];
   } finally {

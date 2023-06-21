@@ -34,7 +34,7 @@ const createRecommendation = async (
 //muestra los datos de un registro de la tabla recomendations
 const getRecommendationById = async (id) => {
   if (!id) {
-    throw generateError("No id provided", 400);
+    throw generateError("No se proporcionó un ID.", 400);
   }
   let connection;
   try {
@@ -48,10 +48,7 @@ const getRecommendationById = async (id) => {
     );
 
     if (result.length === 0) {
-      throw generateError(
-        `The recommendation with id: ${id} does not exist`,
-        404
-      );
+      throw generateError(`La recomendación con ID: ${id} no existe`, 404);
     }
 
     const [votes] = await connection.query(
@@ -160,7 +157,7 @@ const recommendationByUser = async (id) => {
     );
 
     if (recommendation.length === 0) {
-      throw generateError("This user doesn't have recommendations", 404);
+      throw generateError("Este usuario no tiene recomendaciones.", 404);
     }
 
     return recommendation;

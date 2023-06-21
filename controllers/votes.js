@@ -10,9 +10,9 @@ const NewVoteController = async (req, res, next) => {
     const data = await createVotes(req.userId, recommendation[0].result.id);
 
     if (data) {
-      message = "Great choice! You've liked the recommendation.";
+      message = "¡Excelente elección! Te ha gustado la recomendación.";
     } else {
-      message = "Changed your mind? You've unliked the recommendation.";
+      message = `¿Cambiaste de opinión? Has quitado tu "me gusta" de la recomendación.`;
     }
 
     res.send({

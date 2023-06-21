@@ -13,15 +13,8 @@ const userSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-  email: Joi.string().email().required().messages({
-    "string.email": "Please enter a valid email address",
-    "any.required": "Email address is required",
-  }),
-  password: Joi.string().min(8).max(50).required().messages({
-    "string.min": "Password must be at least {#limit} characters long",
-    "string.max": "Password must not exceed {#limit} characters long",
-    "any.required": "Password is required",
-  }),
+  email: Joi.string().email().required().messages(),
+  password: Joi.string().min(8).max(50).required().messages(),
 });
 
 const updateUserSchema = Joi.object({

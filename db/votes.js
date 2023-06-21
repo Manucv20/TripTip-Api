@@ -12,7 +12,7 @@ const createVotes = async (user_id, recomendation_id) => {
     ]);
 
     if (user.length === 0) {
-      throw generateError("User not found", 404);
+      throw generateError("Usuario no encontrado", 404);
     }
 
     // Verificar si ya existe un registro
