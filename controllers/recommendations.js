@@ -39,11 +39,15 @@ const newRecommendationController = async (req, res, next) => {
       const image = sharp(req.files.image.data);
       //verifico que el archivo contenga las extensiones jpg o png
       const fileName = req.files.image.name;
-      if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
-        image.resize(256);
+      if (
+        fileName.endsWith(".jpg") ||
+        fileName.endsWith(".png") ||
+        fileName.endsWith(".jpeg")
+      ) {
+        image.resize(1024);
       } else {
         throw generateError(
-          "Por favor, asegúrate de subir una imagen en formato jpg o png.",
+          "Por favor, asegúrate de subir una imagen en formato jpg, png o jpeg.",
           400
         );
       }
@@ -82,7 +86,7 @@ const deleteRecommendationController = async (req, res, next) => {
 
     const [deleteQuery] = await getRecommendationById(id);
 
-    if (req.userId !== deleteQuery.result.user_id) {
+    if (Number(req.userId) !== deleteQuery.result.user_id) {
       throw generateError(
         "No puedes eliminar una recomendación que no te pertenece.",
         401
@@ -134,7 +138,6 @@ const getRecommendationsByLocationAndCategoryController = async (
         404
       );
     }
-
     res.send({
       status: "OK",
       data: recommendations,
@@ -184,7 +187,7 @@ const updateRecommendationController = async (req, res, next) => {
 
     const [updateQuery] = await getRecommendationById(id);
 
-    if (req.userId !== updateQuery.result.user_id) {
+    if (Number(req.userId) !== updateQuery.result.user_id) {
       throw generateError(
         "No puedes eliminar una recomendación que no te pertenece.",
         401
@@ -202,11 +205,15 @@ const updateRecommendationController = async (req, res, next) => {
       const image = sharp(req.files.image.data);
       //verifico que el archivo contenga las extensiones jpg o png
       const fileName = req.files.image.name;
-      if (fileName.endsWith(".jpg") || fileName.endsWith(".png")) {
-        image.resize(256);
+      if (
+        fileName.endsWith(".jpg") ||
+        fileName.endsWith(".png") ||
+        fileName.endsWith(".jpeg")
+      ) {
+        image.resize(1024);
       } else {
         throw generateError(
-          "Por favor, asegúrate de subir una imagen en formato jpg o png.",
+          "Por favor, asegúrate de subir una imagen en formato jpg, png o jpeg.",
           400
         );
       }

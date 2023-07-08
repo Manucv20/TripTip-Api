@@ -8,6 +8,8 @@ const {
   loginSchema,
   updateUserSchema,
   getUserSchema,
+  getEmailSchema,
+  getPasswordSchema,
 } = require("../schemas/usersSchemas");
 
 const {
@@ -16,10 +18,11 @@ const {
   updateUser,
   getUserById,
   getUserByEmail,
+  updatePassword,
 } = require("../db/users");
 
-const { sendActivationEmail } = require("./email");
-const { createEmailVerification } = require("../db/email");
+const { sendActivationEmail, sendEmail } = require("./email");
+const { createEmailVerification, updateEmail } = require("../db/email");
 const { v4: uuidv4 } = require("uuid");
 
 const generateActivationToken = () => {
@@ -57,7 +60,7 @@ const createNewUser = async (req, res, next) => {
 
     res
       .status(200)
-      .json({ message: "Usuario registrado exitosamente.", userId });
+      .json({ message: "Usuario registrado exitosamente.", userId, token });
   } catch (err) {
     next(err);
   }
@@ -114,10 +117,9 @@ const updateUserController = async (req, res, next) => {
       );
     }
 
-    const { username, name, lastname, address, gender, email, password, bio } =
-      value;
+    const { username, name, lastname, address, gender, email, bio } = value;
 
-    let imageFileName;
+    let imageFileName = null;
 
     if (req.files?.profile_image) {
       //Creo el path del directorio uploads
@@ -141,9 +143,13 @@ const updateUserController = async (req, res, next) => {
 
       await image.toFile(path.join(uploadsDir, imageFileName));
     }
+    
+    if (!imageFileName) {
+      imageFileName = req.imagen;
+    }
 
     try {
-      await updateUser(
+      const dataUser = await updateUser(
         userId,
         username,
         name,
@@ -151,12 +157,13 @@ const updateUserController = async (req, res, next) => {
         address,
         gender,
         email,
-        password,
         imageFileName,
         bio
       );
 
-      res.status(200).json({ message: "Perfil actualizado exitosamente." });
+      res
+        .status(200)
+        .json({ message: "Perfil actualizado exitosamente.", data: dataUser });
     } catch (err) {
       if (err.code === "ER_DUP_ENTRY") {
         return res.status(400).json({
@@ -164,13 +171,13 @@ const updateUserController = async (req, res, next) => {
             "El nombre de usuario o correo electrónico ya existe. Por favor, elige un nombre de usuario  o correo electrónico diferente.",
         });
       }
-
       throw err; // Lanzar el error para ser manejado por el manejador de errores global
     }
   } catch (err) {
     next(err);
   }
 };
+
 const getUserController = async (req, res, next) => {
   try {
     const { error } = getUserSchema.validate(req.params);
@@ -196,9 +203,88 @@ const getUserController = async (req, res, next) => {
   }
 };
 
+const updateEmailController = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    const frontendURL = req.headers["frontend-url"];
+
+    // Validar datos de entrada
+    const { error, value } = getEmailSchema.validate(req.body);
+
+    if (error) {
+      throw generateError(error.details[0].message, 400);
+    }
+
+    if (Number(req.userId) !== Number(userId)) {
+      throw generateError(
+        "No autorizado!! No tienes permiso para modificar los datos de otro usuario.",
+        403
+      );
+    }
+
+    const { email } = value;
+
+    if (req.userEmail == email) {
+      throw generateError(
+        "No se puede modificar el correo, porque no lo has cambiado.",
+        403
+      );
+    }
+
+    const token = generateActivationToken();
+
+    await updateEmail({ email, userId });
+
+    await createEmailVerification({ userId, token });
+
+    await sendEmail({
+      firstName: req.firstName !== "" ? req.firstName : req.userUsername,
+      email,
+      token,
+      frontendURL,
+    });
+    res
+      .status(200)
+      .json({ message: "Correo Actualizado exitosamente.", userId, token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updatePasswordController = async (req, res, next) => {
+  try {
+    const userId = req.params.id;
+    // Validar datos de entrada
+    const { error, value } = getPasswordSchema.validate(req.body);
+
+    if (error) {
+      throw generateError(error.details[0].message, 400);
+    }
+
+    if (Number(req.userId) !== Number(userId)) {
+      throw generateError(
+        "No autorizado!! No tienes permiso para modificar los datos de otro usuario.",
+        403
+      );
+    }
+
+    const { password } = value;
+
+    await updatePassword({ password, userId });
+
+    res
+      .status(200)
+      .json({ message: "Password Actualizado exitosamente.", userId });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   newUserController,
   loginController,
   updateUserController,
   getUserController,
+  updateEmailController,
+  updatePasswordController,
 };

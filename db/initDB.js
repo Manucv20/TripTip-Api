@@ -70,10 +70,10 @@ async function main() {
       user_id INT NOT NULL,
       token VARCHAR(255) NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );`);
   } catch (error) {
-    console.log(error);
+    console.error(error);
   } finally {
     if (connection) connection.release();
     process.exit();
