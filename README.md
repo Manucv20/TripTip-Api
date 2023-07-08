@@ -1,16 +1,14 @@
-# API de viajes recomendados v1.0
+# API de Recomendaciones de Viajes v1.0
 
-La API de viajes recomendados permite a los usuarios publicar y comentar recomendaciones de sitios o experiencias
-poco conocidas de viajes. Los usuarios pueden buscar recomendaciones por lugar, categoría o por usuario, ordenar
-los resultados de búsqueda por votos, ver detalles de una recomendación, iniciar sesión y registrarse en la plataforma.
+La API de Recomendaciones de Viajes permite a los usuarios publicar y comentar recomendaciones de sitios o experiencias poco conocidas de viajes. Los usuarios pueden buscar recomendaciones por lugar, categoría o usuario, ordenar los resultados de búsqueda por votos, ver detalles de una recomendación, iniciar sesión y registrarse en la plataforma.
 
 ## Funcionalidades
 
-- Buscar recomendaciones por lugar, categoría o por usuario
+- Buscar recomendaciones por lugar, categoría o usuario
 - Ordenar los resultados de búsqueda por votos
 - Ver detalles de una recomendación
-- Login con email y contraseña
-- Registro con usuario, nombre, apellido, calle, genero, email, contraseña, biografia y foto de perfil
+- Iniciar sesión con correo electrónico y contraseña
+- Registrarse con usuario, nombre, apellido, dirección, género, correo electrónico, contraseña, biografía y foto de perfil
 
 ### Usuarios registrados
 
@@ -20,7 +18,7 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 - Borrar sus propias recomendaciones
 - Publicar comentarios en las recomendaciones
 - Votar recomendaciones de otros usuarios
-- Gestión del perfil, incluyendo foto de perfil
+- Gestionar el perfil, incluyendo foto de perfil
 
 ## Tecnologías utilizadas
 
@@ -46,25 +44,25 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 
 ### Rutas de recomendaciones
 
-- Crear nueva recomendación: POST /recommendations
-- Borrar recomendación: DELETE /recommendations/:id
-- Obtener todas las recomendaciones por localización o categoría: GET /recommendations
-- Obtener recomendación por ID: GET /recommendation/:id
+- Crear una nueva recomendación: POST /recommendations
+- Borrar una recomendación: DELETE /recommendations/:id
+- Obtener todas las recomendaciones por ubicación o categoría: GET /recommendations
+- Obtener una recomendación por ID: GET /recommendation/:id
 - Obtener recomendaciones ordenadas por votos: GET /recommendations/orderedByVotes
 - Obtener recomendaciones de un usuario: GET /users/:id/recommendations
-- Actualizar recomendación hecha: PUT /recommendations/:id
+- Actualizar una recomendación: PUT /recommendations/:id
 
 ### Rutas de comentarios
 
 - Crear un nuevo comentario en una recomendación: POST /recommendations/comments/:id
 - Obtener comentarios por ID de recomendación: GET /recommendations/:id/comments
-- Borrar comentario por ID: DELETE /comments/:id
+- Borrar un comentario por ID: DELETE /comments/:id
 
 ### Rutas de votos
 
 - Crear un nuevo voto en una recomendación: POST /votes/:idDeRecomendacion
-- Ruta para obtener los votos realizados por un usuario: GET /users/:user_id/votes
-- Ruta para borrar un voto específico: DELETE /users/:user_id/votes/:recommendation_id
+- Obtener los votos realizados por un usuario: GET /users/:user_id/votes
+- Borrar un voto específico: DELETE /users/:user_id/votes/:recommendation_id
 
 ### Rutas de usuarios
 
@@ -72,13 +70,13 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 - Iniciar sesión: POST /user/login
 - Actualizar usuario: PUT /user/:id
 - Obtener usuario por ID: GET /user/:id
-- Modificar Email: PUT /user/email/:id
-- Modificar Password: PUT /user/password/:id
+- Modificar correo electrónico: PUT /user/email/:id
+- Modificar contraseña: PUT /user/password/:id
 
-### Rutas de email
+### Rutas de correo electrónico
 
-- Enviar Email: POST /email/send
-- Activación de cuenta por email: GET /activate-account/:token
+- Enviar correo electrónico: POST /email/send
+- Activación de cuenta por correo electrónico: GET /activate-account/:token
 
 ## Instalación de dependencias
 
@@ -86,19 +84,26 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 
 ## Crear las tablas de la base de datos
 
-- Ejecuta en terminal `node .\db\initDB.js`
+- Ejecuta en la terminal `node .\db\initDB.js`.
 
-Con este comando permite inicializar las tablas en la base de datos utilizando Node.js.
-Al ejecutar este comando, se conecta a la base de datos y crea las tablas necesarias para
-el funcionamiento de la API. Este comando debe ser ejecutado una sola vez, antes de utilizar
-la API por primera vez, o en caso de que se requiera reiniciar las tablas de la base de datos.
+Este comando permite inicializar las tablas en la base de datos utilizando Node.js. Al ejecutar este comando, se conecta a la base de datos y crea las tablas necesarias para el funcionamiento de la API. Este comando debe ser ejecutado una sola vez, antes de utilizar la API por primera vez, o en caso de que se requiera reiniciar las tablas de la base de datos.
+
+## Generar datos de ejemplo
+
+- Ejecuta en la terminal `node .\db\sampleData.js`.
+
+Este comando generará datos de ejemplo en la base de datos. Los datos de ejemplo incluirán usuarios de ejemplo y recomendaciones asociadas a esos usuarios. Ten en cuenta que este comando generará datos de ejemplo y puede afectar los datos existentes en la base de datos. Úsalo con precaución y solo con fines de desarrollo o pruebas.
+
+Recuerda que debes haber ejecutado previamente el comando `node .\db\initDB.js` para crear las tablas necesarias en la base de datos antes de ejecutar el comando `node .\db\sampleData.js`.
 
 ## Configurar las variables de entorno
 
-- Crear un archivo `.env` en la raíz del proyecto.
-- Copiar el contenido del archivo `.env.example` en el archivo `.env`.
-- Configurar las variables de entorno en el archivo `.env`.
+- Crea un archivo `.env` en la raíz del proyecto.
+- Copia el contenido del archivo `.env.example` en el archivo `.env`.
+- Configura las variables de entorno en el archivo `.env` según la configuración de tu entorno de desarrollo.
 
 ## Iniciar el servidor
 
-- Iniciar el servidor con `npm run start`.
+- Inicia el servidor con el comando `npm run start`.
+
+Con este comando, el servidor de la API comenzará a escuchar en el puerto especificado en el archivo `.env`. Ahora puedes comenzar a enviar solicitudes a la API utilizando herramientas como Postman o realizar integraciones con aplicaciones frontend.
