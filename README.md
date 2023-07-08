@@ -46,7 +46,7 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 
 ### Rutas de recomendaciones
 
-- Crear nueva recomendación: POST /recommendations/
+- Crear nueva recomendación: POST /recommendations
 - Borrar recomendación: DELETE /recommendations/:id
 - Obtener todas las recomendaciones por localización o categoría: GET /recommendations
 - Obtener recomendación por ID: GET /recommendation/:id
@@ -58,7 +58,7 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 
 - Crear un nuevo comentario en una recomendación: POST /recommendations/comments/:id
 - Obtener comentarios por ID de recomendación: GET /recommendations/:id/comments
-- Borrar comentario por ID: DELETE /comments/:idUsuario
+- Borrar comentario por ID: DELETE /comments/:id
 
 ### Rutas de votos
 
