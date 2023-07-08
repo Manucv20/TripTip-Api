@@ -13,3 +13,7 @@ node_modules/
 .prettierrc.json
 
 **/.prettierrc.json
+
+.eslintrc.cjs
+
+**/.eslintrc.cjs

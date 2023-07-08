@@ -1,4 +1,4 @@
-const fs = require('fs/promises');
+const fs = require("fs/promises");
 
 const generateError = (message, status) => {
   const error = new Error(message);

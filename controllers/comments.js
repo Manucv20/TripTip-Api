@@ -1,16 +1,16 @@
-const { getConnection } = require('../db/db.js');
+const { getConnection } = require("../db/db.js");
+
 const {
   newCommentSchema,
   idCommentsSchema,
-} = require('../schemas/commentsSchemas');
+} = require("../schemas/commentsSchemas");
+
 const {
   createComments,
   getCommentsByRecommendations,
   getCommentById,
-} = require('../db/comments.js');
-const path = require('path');
-const { createPathIfNotExists } = require('../helpers');
-const sharp = require('sharp');
+} = require("../db/comments.js");
+const { generateError } = require("../helpers.js");
 
 const newCommentController = async (req, res, next) => {
   try {
@@ -20,29 +20,33 @@ const newCommentController = async (req, res, next) => {
       return;
     }
 
-    const { user_id, recommendation_id, comment } = req.body;
-    const commentId = await createComments(user_id, recommendation_id, comment);
+    const { comment } = value;
+
+    const commentId = await createComments(req.userId, req.params.id, comment);
+
     return res
-      .status(201)
-      .json({ message: 'Comment posted successfully', commentId });
+      .status(200)
+      .json({ message: "Comentario publicado exitosamente.", commentId });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 };
+
 const getCommentsByRecommendationsController = async (req, res, next) => {
   try {
-    const { error } = idCommentsSchema.validate(req.params);
+    const { error, value } = idCommentsSchema.validate(req.params);
+
     if (error) {
-      return res.status(400).json({ error: 'Invalid id' });
+      return res.status(400).json({ error: "Id Invalido" });
     }
 
-    const comments = await getCommentsByRecommendations(req, res);
+    const { id } = value;
 
-    res.status(200).json({ comments: comments });
+    const comments = await getCommentsByRecommendations(id);
+
+    return res.status(200).json({ comments: comments });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    next(err);
   }
 };
 
@@ -51,25 +55,24 @@ const deleteCommentsByUserController = async (req, res, next) => {
   try {
     const { error } = idCommentsSchema.validate(req.params);
     if (error) {
-      return res.status(400).json({ error: 'Invalid id' });
+      return res.status(400).json({ error: "Id Invalido" });
     }
     const { id } = req.params;
     const comment = await getCommentById(id);
-    console.log(req.userId);
-    console.log(comment.user_id);
+
     if (req.userId !== comment.user_id) {
-      throw new Error(
-        'You are trying to delete a comment that does not belong to you'
+      throw generateError(
+        "No estás autorizado para eliminar este comentario",
+        400
       );
     }
     connection = await getConnection();
-    const deleteCommentQuery = 'DELETE FROM comments WHERE id = ?';
+    const deleteCommentQuery = "DELETE FROM comments WHERE id = ?";
     await connection.query(deleteCommentQuery, [id]);
 
-    res.status(200).json({ message: 'Comment deleted successfully' });
+    res.status(200).json({ message: "Comentario eliminado exitosamente." });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    next(err);
   } finally {
     if (connection) connection.release();
   }

@@ -1,5 +1,5 @@
-const { generateError } = require('../helpers');
-const { getConnection } = require('./db');
+const { generateError } = require("../helpers");
+const { getConnection } = require("./db");
 
 //Crear una recomendación en la base de datos y devuelve su id
 const createRecommendation = async (
@@ -9,7 +9,7 @@ const createRecommendation = async (
   location,
   sumary,
   details,
-  image = ''
+  image = ""
 ) => {
   let connection;
   try {
@@ -30,10 +30,11 @@ const createRecommendation = async (
     if (connection) connection.release();
   }
 };
-//muestra los datos de un registro de la tabla recomendations
+
+//muestra los datos de un registro de la tabla Recommendations
 const getRecommendationById = async (id) => {
   if (!id) {
-    throw generateError('No id provided', 400);
+    throw generateError("No se proporcionó un ID.", 400);
   }
   let connection;
   try {
@@ -46,27 +47,32 @@ const getRecommendationById = async (id) => {
       [id]
     );
 
+    const [userResult] = await connection.query(
+      `
+      SELECT username FROM users WHERE id = ?
+    `,
+      [result[0].user_id]
+    );
+
     if (result.length === 0) {
-      throw generateError(
-        `The recommendation with id: ${id} does not exist`,
-        404
-      );
+      throw generateError(`La recomendación con ID: ${id} no existe`, 404);
     }
 
     const [votes] = await connection.query(
-      'SELECT COUNT(*) as count FROM votes WHERE recommendation_id = ?',
+      "SELECT SUM(value) as votes FROM votes WHERE recommendation_id = ?",
       [id]
     );
 
     const [comments] = await connection.query(
-      'SELECT comments.*, users.name FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.recommendation_id = ?',
+      "SELECT comments.*, users.username FROM comments INNER JOIN users ON comments.user_id = users.id WHERE comments.recommendation_id = ? ORDER BY comments.created_at DESC",
       [id]
     );
 
     const recommendation = {
       result: result[0],
-      votes: votes[0].count,
+      votes: votes[0].votes,
       comments: comments,
+      userResult: userResult[0],
     };
 
     return [recommendation];
@@ -74,6 +80,7 @@ const getRecommendationById = async (id) => {
     if (connection) connection.release();
   }
 };
+
 //Muestra el resultado de la busqueda de recomendaciones por lugar o categoria
 const getRecommendation = async (location, category) => {
   let connection;
@@ -82,20 +89,20 @@ const getRecommendation = async (location, category) => {
     connection = await getConnection();
 
     let searchQuery =
-      'SELECT r.*, (SELECT COUNT(*) FROM votes v WHERE v.recommendation_id = r.id) as votes FROM recommendations r WHERE 1=1';
+      "SELECT r.*, (SELECT COUNT(*) FROM votes v WHERE v.recommendation_id = r.id) as votes FROM recommendations r WHERE 1=1";
     let searchParams = [];
 
     if (location) {
-      searchQuery += ' AND r.location = ?';
+      searchQuery += " AND r.location = ?";
       searchParams.push(location);
     }
 
     if (category) {
-      searchQuery += ' AND r.category = ?';
+      searchQuery += " AND r.category = ?";
       searchParams.push(category);
     }
 
-    searchQuery += ' ORDER BY votes DESC';
+    searchQuery += " ORDER BY votes DESC";
 
     const [rows] = await connection.query(searchQuery, searchParams);
 
@@ -104,6 +111,7 @@ const getRecommendation = async (location, category) => {
     if (connection) connection.release();
   }
 };
+
 //Elimina tu propia recomendación
 const deleteRecommendationById = async (id) => {
   let connection;
@@ -123,23 +131,26 @@ const deleteRecommendationById = async (id) => {
     if (connection) connection.release();
   }
 };
+
 const recommendationOrderedByVotes = async () => {
   let connection;
 
   try {
     connection = await getConnection();
     const [query] = await connection.query(`
-      SELECT r.*, COUNT(v.value) AS votes
+      SELECT r.*, COALESCE(SUM(v.value), 0) AS votes
       FROM recommendations r
       LEFT JOIN votes v ON v.recommendation_id = r.id
       GROUP BY r.id
-      ORDER BY votes DESC
+      ORDER BY votes DESC;
     `);
+
     return query;
   } finally {
     if (connection) connection.release();
   }
 };
+
 const recommendationByUser = async (id) => {
   let connection;
 
@@ -148,10 +159,17 @@ const recommendationByUser = async (id) => {
 
     const [recommendation] = await connection.query(
       `
-    SELECT * FROM recommendations WHERE user_id = ?
-    `,
+      SELECT recommendations.*, 
+        (SELECT COUNT(*) FROM votes WHERE votes.recommendation_id = recommendations.id) AS votes
+      FROM recommendations
+      WHERE user_id = ?
+      `,
       [id]
     );
+
+    if (recommendation.length === 0) {
+      throw generateError("Este usuario no tiene recomendaciones.", 404);
+    }
 
     return recommendation;
   } finally {
@@ -159,28 +177,36 @@ const recommendationByUser = async (id) => {
   }
 };
 
-const checkRecommendationExists = async (
+const updateRecommendation = async (
   userId,
   title,
   category,
   location,
   summary,
-  details
+  details,
+  image = "",
+  id
 ) => {
   let connection;
   try {
     connection = await getConnection();
-    const [existingRecommendation] = await connection.query(
-      `
-      SELECT id
-      FROM recommendations
-      WHERE user_id = ? AND title = ? AND category = ? AND location = ? AND summary = ? AND details = ?
-      LIMIT 1
-    `,
-      [userId, title, category, location, summary, details]
+    //Crear una recomendacion
+
+    const [newRecommendation] = await connection.query(
+      `UPDATE recommendations
+      SET user_id = ?,
+      title = ?, 
+      category = ?, 
+      location = ?, 
+      summary = ?, 
+      details = ?, 
+      image = ?
+      WHERE id = ?;`,
+      [userId, title, category, location, summary, details, image, id]
     );
 
-    return existingRecommendation.length > 0;
+    //Devolver la id
+    return newRecommendation.insertId;
   } finally {
     if (connection) connection.release();
   }
@@ -193,5 +219,5 @@ module.exports = {
   deleteRecommendationById,
   recommendationOrderedByVotes,
   recommendationByUser,
-  checkRecommendationExists,
+  updateRecommendation,
 };
