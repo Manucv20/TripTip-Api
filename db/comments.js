@@ -40,15 +40,7 @@ const getCommentsByRecommendations = async (id) => {
       "SELECT comments.*, users.username as username, users.profile_image as avatar FROM comments INNER JOIN users ON comments.user_id = users.id WHERE recommendation_id = ?",
       [id]
     );
-    
-    if (result.length === 0) {
-      throw generateError(
-        "No se encontraron comentarios para esta recomendación.",
-        404
-      );
-    }
-    return res.status(200).json({ comments: result });
-    
+    return result;
   } finally {
     if (connection) connection.release();
   }

@@ -132,12 +132,6 @@ const getRecommendationsByLocationAndCategoryController = async (
     const category = req.query.category || "";
     const recommendations = await getRecommendation(localization, category);
 
-    if (recommendations.length === 0) {
-      throw generateError(
-        "No se encontraron recomendaciones para los criterios dados.",
-        404
-      );
-    }
     res.send({
       status: "OK",
       data: recommendations,
@@ -150,8 +144,6 @@ const getRecommendationsByLocationAndCategoryController = async (
 const getRecommendationOrderedByVotesController = async (req, res, next) => {
   try {
     const query = await recommendationOrderedByVotes();
-
-    console.log(query);
 
     res.status(200).json({ recommendations: query });
   } catch (err) {

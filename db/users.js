@@ -119,15 +119,11 @@ const updateUser = async (
   address,
   gender,
   email,
-  password,
   profile_image,
   bio
 ) => {
   let connection;
   try {
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
     connection = await getConnection();
 
     const [usernameExist] = await connection.query(
