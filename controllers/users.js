@@ -143,7 +143,7 @@ const updateUserController = async (req, res, next) => {
 
       await image.toFile(path.join(uploadsDir, imageFileName));
     }
-
+    
     if (!imageFileName) {
       imageFileName = req.imagen;
     }
@@ -171,7 +171,6 @@ const updateUserController = async (req, res, next) => {
             "El nombre de usuario o correo electrónico ya existe. Por favor, elige un nombre de usuario  o correo electrónico diferente.",
         });
       }
-
       throw err; // Lanzar el error para ser manejado por el manejador de errores global
     }
   } catch (err) {
