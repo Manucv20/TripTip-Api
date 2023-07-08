@@ -63,6 +63,8 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 ### Rutas de votos
 
 - Crear un nuevo voto en una recomendación: POST /votes/:idDeRecomendacion
+- Ruta para obtener los votos realizados por un usuario: GET /users/:user_id/votes
+- Ruta para borrar un voto específico: DELETE /users/:user_id/votes/:recommendation_id
 
 ### Rutas de usuarios
 
@@ -70,6 +72,13 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 - Iniciar sesión: POST /user/login
 - Actualizar usuario: PUT /user/:id
 - Obtener usuario por ID: GET /user/:id
+- Modificar Email: PUT /user/email/:id
+- Modificar Password: PUT /user/password/:id
+
+### Rutas de email
+
+- Enviar Email: POST /email/send
+- Activación de cuenta por email: GET /activate-account/:token
 
 ## Instalación de dependencias
 
