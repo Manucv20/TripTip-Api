@@ -23,6 +23,7 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 ## Tecnologías utilizadas
 
 - Bcrypt
+- Cors
 - Dotenv
 - Eslint
 - Express
@@ -35,11 +36,13 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 - Mysql
 - Mysql2
 - Nanoid
+- Node-mailjet
+- Nodemailer
 - Nodemon
 - Prettier
 - Sharp
 - Uuid
-
+  
 ## Rutas de la API
 
 ### Rutas de recomendaciones
@@ -93,6 +96,8 @@ Este comando permite inicializar las tablas en la base de datos utilizando Node.
 - Ejecuta en la terminal `node .\db\sampleData.js`.
 
 Este comando generará datos de ejemplo en la base de datos. Los datos de ejemplo incluirán usuarios de ejemplo y recomendaciones asociadas a esos usuarios. Ten en cuenta que este comando generará datos de ejemplo y puede afectar los datos existentes en la base de datos. Úsalo con precaución y solo con fines de desarrollo o pruebas.
+
+El Script crea dos perfiles con recomendaciones, donde el correo es user1@example.com y user2@example.com con su respectiva contraseña que se hashea pero que es password123.
 
 Recuerda que debes haber ejecutado previamente el comando `node .\db\initDB.js` para crear las tablas necesarias en la base de datos antes de ejecutar el comando `node .\db\sampleData.js`.
 
