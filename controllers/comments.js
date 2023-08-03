@@ -60,7 +60,7 @@ const deleteCommentsByUserController = async (req, res, next) => {
     const { id } = req.params;
     const comment = await getCommentById(id);
 
-    if (req.userId !== comment.user_id) {
+    if (Number(req.userId) !== comment.user_id) {
       throw generateError(
         "No estás autorizado para eliminar este comentario",
         400
