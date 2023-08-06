@@ -164,6 +164,9 @@ function shuffleArray(array) {
 
 async function generateSampleDataWithImages() {
   try {
+    const imageUrls = await fetchRandomImageUrls(20);
+    console.log("Fetched image URLs:", imageUrls); // Add this line to check image URLs
+
     await generateSampleData();
   } catch (error) {
     console.error("Error generating sample data:", error);
