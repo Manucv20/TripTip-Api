@@ -1,25 +1,90 @@
+// Carga las variables de entorno desde el archivo .env
 require("dotenv").config();
+
+// Importa los módulos necesarios
 const path = require("path");
-const fs = require("fs");
 const axios = require("axios");
 const { promisify } = require("util");
 const { getConnection } = require("./db");
 const bcrypt = require("bcrypt");
+const fs = require("fs");
+const ProgressBar = require("progress");  // Importa la biblioteca cli-progress
 
-const readFileAsync = promisify(fs.readFile);
-const writeFileAsync = promisify(fs.writeFile);
+// Tamaño de las imágenes a descargar
+const IMAGE_SIZE = "1024x1024";
 
+// URL de la API de Unsplash
+const API_URL = "https://source.unsplash.com";
+
+// Cantidad de imágenes a obtener
+const imageCount = 20;
+
+// Función para obtener URLs aleatorias de imágenes
+async function fetchRandomImageUrls(count) {
+  const category = "nature"; // Ajusta esto según tus necesidades
+  const imageUrls = [];
+
+  for (let i = 0; i < count; i++) {
+    const imageUrl = `${API_URL}/${IMAGE_SIZE}/?${category}&random=${Math.random()}`;
+    imageUrls.push(imageUrl);
+  }
+
+  return imageUrls;
+}
+
+// Función para subir una imagen al almacenamiento
 async function uploadImageToStorage(imageUrl) {
-  console.log(`Downloading image: ${imageUrl}`);
-  const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
-  const imageBuffer = Buffer.from(response.data);
+  console.log(`Descargando imagen: ${imageUrl}`);
+  const response = await axios.get(imageUrl, { responseType: "stream" });
+
   const imageExtension = ".jpg";
   const imageName = generateImageName();
   const uploadedImagePath = path.join("uploads", `${imageName}${imageExtension}`);
-  await writeFileAsync(uploadedImagePath, imageBuffer);
+
+  const totalBytes = Number(response.headers["content-length"]);
+  let completedBytes = 0;
+
+  // Utiliza la biblioteca cli-progress para mostrar la barra de progreso
+  const progressBar = new ProgressBar('  [:bar] :percent :etas', {
+    complete: '=',
+    incomplete: ' ',
+    width: 40,
+    total: totalBytes,
+  });
+
+  const writeStream = fs.createWriteStream(uploadedImagePath);
+
+  writeStream.on("finish", () => {
+    progressBar.terminate(); // Termina la barra de progreso
+    progressBar.tick(totalBytes); // Marca como completados todos los ticks restantes
+    console.log(`Imagen descargada y guardada: ${uploadedImagePath}\n`); // Imprime el mensaje de éxito con un salto de línea
+
+  });
+
+  writeStream.on("error", (error) => {
+    console.error("Error al guardar la imagen:", error);
+  });
+
+  // Escucha el evento "data" para actualizar la barra de progreso
+  response.data
+    .on("data", (chunk) => {
+      completedBytes += chunk.length;
+      progressBar.tick(chunk.length); // Actualiza la barra de progreso
+      writeStream.write(chunk);
+    })
+    .on("end", () => {
+      writeStream.end(); // Finaliza el flujo de escritura
+    });
+
+  // Espera a que finalice la escritura antes de continuar
+  await new Promise((resolve) => {
+    writeStream.on("close", resolve);
+  });
+
   return `${imageName}${imageExtension}`;
 }
 
+// Función para generar un nombre de imagen aleatorio
 function generateImageName() {
   const characters = "0123456789abcdef";
   let imageName = "";
@@ -29,7 +94,9 @@ function generateImageName() {
   return imageName;
 }
 
+// Función para generar datos de ejemplo
 async function generateSampleData() {
+  // Arrays con datos de ejemplo
   const categories = [
     "Safari",
     "Senderismo",
@@ -57,26 +124,26 @@ async function generateSampleData() {
   ];
 
   const summaries = [
-    "Discover the vibrant city of New York and explore its iconic points of interest and attractions.",
-    "Experience the romantic charm of Paris and indulge in its exquisite cuisine and art.",
-    "Immerse yourself in the bustling streets of Tokyo and embrace its unique blend of tradition and modernity.",
-    "Travel back in time in Rome and marvel at its ancient ruins and architectural wonders.",
-    "Uncover the rich history and royal heritage of London through its majestic palaces and museums.",
-    "Enjoy the sun-drenched beaches of Sydney and embrace a relaxed coastal lifestyle.",
-    "Samba through the colorful streets of Rio de Janeiro during Carnival.",
-    "Embark on a safari adventure in Cape Town and encounter wildlife in its natural habitat.",
-    "Experience the grandeur of Moscow and explore its opulent palaces and iconic landmarks.",
-    "Indulge in luxury and extravagance in the dazzling city of Dubai."
+    "Descubre la vibrante ciudad de Nueva York y explora sus icónicos puntos de interés y atracciones.",
+    "Vive el encanto romántico de París y disfruta de su exquisita gastronomía y arte.",
+    "Sumérgete en las bulliciosas calles de Tokio y abraza su mezcla única de tradición y modernidad.",
+    "Viaja en el tiempo en Roma y maravíllate con sus ruinas antiguas y maravillas arquitectónicas.",
+    "Descubre la rica historia y la herencia real de Londres a través de sus majestuosos palacios y museos.",
+    "Disfruta de las playas bañadas por el sol de Sídney y abraza un estilo de vida costero relajado.",
+    "Baila samba por las coloridas calles de Río de Janeiro durante el Carnaval.",
+    "Embárcate en una aventura de safari en Ciudad del Cabo y encuentra la vida silvestre en su hábitat natural.",
+    "Experimenta la grandeza de Moscú y explora sus suntuosos palacios y monumentos icónicos.",
+    "Date un lujo de lujo y extravagancia en la deslumbrante ciudad de Dubái."
   ];
 
-  const imageUrls = await fetchRandomImageUrls(20);
+  const imageUrls = await fetchRandomImageUrls(imageCount);
 
   let connection;
 
   try {
     connection = await getConnection();
 
-    // Generate example users
+    // Generar ejemplos de usuarios
     const userCount = 2;
 
     for (let i = 1; i <= userCount; i++) {
@@ -84,17 +151,17 @@ async function generateSampleData() {
         username: `user${i}`,
         name: `User ${i}`,
         email: `user${i}@example.com`,
-        password: "password123", // Change this to the actual password
+        password: "password123", // Cambia esto por la contraseña real
         created_at: new Date().toISOString(),
-        isActivated: 1, // Set isActivated to 1
+        isActivated: 1, // Establece isActivated en 1
       };
 
-      // Hash the password
+      // Hashear la contraseña
       const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+      const hashedPassword = await promisify(bcrypt.hash)(user.password, saltRounds);
       user.password = hashedPassword;
 
-      // Upload and add image to the user
+      // Subir y agregar imagen al usuario
       const imageUrl = imageUrls[i - 1];
       const imageName = await uploadImageToStorage(imageUrl);
       user.profile_image = imageName;
@@ -102,7 +169,7 @@ async function generateSampleData() {
       await connection.query("INSERT INTO users SET ?", user);
     }
 
-    // Generate example recommendations
+    // Generar ejemplos de recomendaciones
     const recommendations = [];
 
     for (let i = 0; i < categories.length; i++) {
@@ -114,7 +181,7 @@ async function generateSampleData() {
       const imageUrl = imageUrls[i];
 
       for (let j = 0; j < 4; j++) {
-        const title = `${category} Experience ${j + 1}`;
+        const title = `${category} Experiencia ${j + 1}`;
 
         const imageName = await uploadImageToStorage(imageUrl);
 
@@ -128,33 +195,18 @@ async function generateSampleData() {
       await connection.query("INSERT INTO recommendations SET ?", recommendation);
     }
 
-    console.log("Sample data created successfully!");
+    console.log("Datos de ejemplo creados exitosamente!");
   } catch (error) {
-    console.error(error);
+    console.error("Ocurrió un error:", error);
   } finally {
-    if (connection) connection.release();
+    if (connection) {
+      connection.release();
+    }
     process.exit();
   }
 }
 
-async function fetchRandomImageUrls(count) {
-  const unsplashApiUrl = `https://source.unsplash.com/1024x1024/?nature`;
-
-  try {
-    const imageUrls = [];
-
-    for (let i = 0; i < count; i++) {
-      const imageUrl = `${unsplashApiUrl}&random=${Math.random()}`;
-      imageUrls.push(imageUrl);
-    }
-
-    return imageUrls;
-  } catch (error) {
-    console.error("Error fetching imageURLs:", error);
-    throw error;
-  }
-}
-
+// Función para mezclar un array de forma aleatoria
 function shuffleArray(array) {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -162,15 +214,14 @@ function shuffleArray(array) {
   }
 }
 
+// Función para generar datos de ejemplo junto con imágenes
 async function generateSampleDataWithImages() {
   try {
-    const imageUrls = await fetchRandomImageUrls(20);
-    console.log("Fetched image URLs:", imageUrls); // Add this line to check image URLs
-
     await generateSampleData();
   } catch (error) {
-    console.error("Error generating sample data:", error);
+    console.error("Error al generar datos de ejemplo:", error);
   }
 }
 
+// Llama a la función para generar datos de ejemplo con imágenes
 generateSampleDataWithImages();

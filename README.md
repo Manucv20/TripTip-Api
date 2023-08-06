@@ -22,13 +22,16 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 
 ## Tecnologías utilizadas
 
+- Axios
 - Bcrypt
+- Cli-progress
 - Cors
 - Dotenv
 - Eslint
 - Express
 - Express-fileupload
 - Express-validator
+- Har-validator
 - Joi
 - Jsonwebtoken
 - Morgan
@@ -40,9 +43,11 @@ Los usuarios registrados tienen acceso a las siguientes funcionalidades:
 - Nodemailer
 - Nodemon
 - Prettier
+- Progress
+- Request
 - Sharp
 - Uuid
-  
+
 ## Rutas de la API
 
 ### Rutas de recomendaciones
